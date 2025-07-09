@@ -61,13 +61,13 @@
 - [x] Create migration for `idbi_password_histories` table
 
 ### **5. Database Views Creation**
-- [ ] Create view `v_top_active_users` for monthly login statistics
-- [ ] Create view `v_login_trends` for 15-day login data
-- [ ] Create view `v_popular_content` for most visited content (partially completed, needs refinement)
-- [ ] Create view `v_online_users` for real-time sessions (partially completed, needs refinement)
-- [ ] Add indexes to all foreign key columns
-- [ ] Add indexes to frequently queried columns
-- [ ] Test all migrations with rollback
+- [x] Create view `v_top_active_users` for monthly login statistics
+- [x] Create view `v_login_trends` for 15-day login data
+- [x] Create view `v_popular_content` for most visited content (partially completed, needs refinement)
+- [x] Create view `v_online_users` for real-time sessions (partially completed, needs refinement)
+- [x] Add indexes to all foreign key columns
+- [x] Add indexes to frequently queried columns
+- [x] Test all migrations with rollback
 
 ### **6. Model Creation**
 - [ ] Create User model with UUID trait
