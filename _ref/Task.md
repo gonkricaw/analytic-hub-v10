@@ -39,26 +39,26 @@
 ## **Database Layer Development**
 
 ### **4. Database Schema Creation**
-- [ ] Create migration for `idbi_users` table with UUID
-- [ ] Create migration for `idbi_roles` table
-- [ ] Create migration for `idbi_permissions` table
-- [ ] Create migration for `idbi_role_permissions` pivot table
-- [ ] Create migration for `idbi_user_roles` pivot table
-- [ ] Create migration for `idbi_menus` table (3-level hierarchy)
-- [ ] Create migration for `idbi_menu_roles` pivot table
-- [ ] Create migration for `idbi_contents` table
-- [ ] Create migration for `idbi_content_roles` pivot table
-- [ ] Create migration for `idbi_email_templates` table
-- [ ] Create migration for `idbi_email_queue` table
-- [ ] Create migration for `idbi_notifications` table
-- [ ] Create migration for `idbi_user_notifications` pivot table
-- [ ] Create migration for `idbi_user_activities` table
-- [ ] Create migration for `idbi_password_resets` table
-- [ ] Create migration for `idbi_blacklisted_ips` table
-- [ ] Create migration for `idbi_system_configs` table
-- [ ] Create migration for `idbi_user_avatars` table
-- [ ] Create migration for `idbi_login_attempts` table
-- [ ] Create migration for `idbi_password_histories` table
+- [x] Create migration for `idbi_users` table with UUID
+- [x] Create migration for `idbi_roles` table
+- [x] Create migration for `idbi_permissions` table
+- [x] Create migration for `idbi_role_permissions` pivot table
+- [x] Create migration for `idbi_user_roles` pivot table
+- [x] Create migration for `idbi_menus` table (3-level hierarchy)
+- [x] Create migration for `idbi_menu_roles` pivot table
+- [x] Create migration for `idbi_contents` table
+- [x] Create migration for `idbi_content_roles` pivot table
+- [x] Create migration for `idbi_email_templates` table
+- [x] Create migration for `idbi_email_queue` table
+- [x] Create migration for `idbi_notifications` table
+- [x] Create migration for `idbi_user_notifications` pivot table
+- [x] Create migration for `idbi_user_activities` table
+- [x] Create migration for `idbi_password_resets` table
+- [x] Create migration for `idbi_blacklisted_ips` table
+- [x] Create migration for `idbi_system_configs` table
+- [x] Create migration for `idbi_user_avatars` table
+- [x] Create migration for `idbi_login_attempts` table
+- [x] Create migration for `idbi_password_histories` table
 
 ### **5. Database Views Creation**
 - [ ] Create view `v_top_active_users` for monthly login statistics
