@@ -70,37 +70,37 @@
 - [x] Test all migrations with rollback
 
 ### **6. Model Creation**
-- [ ] Create User model with UUID trait
-- [ ] Create Role model with relationships
-- [ ] Create Permission model
-- [ ] Create Menu model with hierarchical relationships
-- [ ] Create Content model with encryption methods
-- [ ] Create EmailTemplate model
-- [ ] Create EmailQueue model
-- [ ] Create Notification model
-- [ ] Create UserActivity model
-- [ ] Create BlacklistedIp model
-- [ ] Create SystemConfig model
-- [ ] Create UserAvatar model
-- [ ] Create LoginAttempt model
-- [ ] Create PasswordHistory model
-- [ ] Add all model relationships
-- [ ] Add model scopes for common queries
-- [ ] Add model observers for activity logging
+- [x] Create User model with UUID trait
+- [x] Create Role model with relationships
+- [x] Create Permission model
+- [x] Create Menu model with hierarchical relationships
+- [x] Create Content model with encryption methods
+- [x] Create EmailTemplate model
+- [x] Create EmailQueue model
+- [x] Create Notification model
+- [x] Create UserActivity model
+- [x] Create BlacklistedIp model
+- [x] Create SystemConfig model
+- [x] Create UserAvatar model
+- [x] Create LoginAttempt model
+- [x] Create PasswordHistory model
+- [x] Add all model relationships
+- [x] Add model scopes for common queries
+- [x] Add model observers for activity logging
 
 ---
 
 ## **Authentication System Development**
 
 ### **7. Authentication Core**
-- [ ] Implement custom authentication with email/password
-- [ ] Create login controller with IP tracking
-- [ ] Implement failed login counter (30 attempts)
-- [ ] Create IP blacklisting functionality
-- [ ] Implement session management with timeout
-- [ ] Create logout functionality with session cleanup
-- [ ] Add remember me functionality
-- [ ] Implement CSRF protection on all forms
+- [x] Implement custom authentication with email/password
+- [x] Create login controller with IP tracking
+- [x] Implement failed login counter (30 attempts)
+- [x] Create IP blacklisting functionality
+- [x] Implement session management with timeout
+- [x] Create logout functionality with session cleanup
+- [x] Add remember me functionality
+- [x] Implement CSRF protection on all forms
 
 ### **8. Password Management**
 - [ ] Create password validation rules (8 chars, mixed case, numbers, special)

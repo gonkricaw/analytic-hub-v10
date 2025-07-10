@@ -93,9 +93,9 @@ return [
     'passwords' => [
         'users' => [
             'provider' => 'users',
-            'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
-            'expire' => 60,
-            'throttle' => 60,
+            'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'idbi_password_resets'),
+            'expire' => 120, // 120 minutes as per requirements
+            'throttle' => 30, // 30 seconds cooldown as per requirements
         ],
     ],
 
