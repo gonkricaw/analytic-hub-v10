@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PasswordChangeController;
+use App\Http\Controllers\PasswordResetController;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,14 +25,14 @@ Route::middleware('guest')->group(function () {
         ->name('login.submit');
     
     // Password reset routes
-    Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm'])
+    Route::get('/forgot-password', [PasswordResetController::class, 'showForgotForm'])
         ->name('password.request');
-    Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])
+    Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])
         ->middleware('throttle:password-reset')
         ->name('password.email');
-    Route::get('/reset-password/{token}', [AuthController::class, 'showResetPasswordForm'])
+    Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetForm'])
         ->name('password.reset');
-    Route::post('/reset-password', [AuthController::class, 'resetPassword'])
+    Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])
         ->name('password.update');
 });
 
@@ -57,16 +59,20 @@ Route::middleware(['auth.user', 'check.status'])->group(function () {
 // Special authentication flow routes (accessible when authenticated but with specific conditions)
 Route::middleware('auth.user')->group(function () {
     // First-time password change
-    Route::get('/password/first-change', [AuthController::class, 'showFirstPasswordChangeForm'])
+    Route::get('/password/first-change', [PasswordChangeController::class, 'showFirstChangeForm'])
         ->name('password.first-change');
-    Route::post('/password/first-change', [AuthController::class, 'updateFirstPassword'])
+    Route::post('/password/first-change', [PasswordChangeController::class, 'updateFirstChange'])
         ->name('password.first-change.update');
     
     // Password expired
-    Route::get('/password/expired', [AuthController::class, 'showPasswordExpiredForm'])
+    Route::get('/password/expired', [PasswordChangeController::class, 'showExpiredForm'])
         ->name('password.expired');
-    Route::post('/password/expired', [AuthController::class, 'updateExpiredPassword'])
+    Route::post('/password/expired', [PasswordChangeController::class, 'updateExpired'])
         ->name('password.expired.update');
+    
+    // Password requirements API
+    Route::get('/api/password/requirements', [PasswordChangeController::class, 'getPasswordRequirements'])
+        ->name('password.requirements');
     
     // Terms & Conditions acceptance
     Route::get('/terms/accept', function () {

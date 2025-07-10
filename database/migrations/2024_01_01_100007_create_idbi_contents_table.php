@@ -88,7 +88,7 @@ return new class extends Migration
             $table->index(['view_count']);
             $table->index(['created_at']);
             $table->index(['published_at']);
-            $table->fullText(['title', 'content', 'excerpt']); // Full-text search
+            // $table->fullText(['title', 'content', 'excerpt']); // Full-text search (not supported in SQLite)
         });
     }
 

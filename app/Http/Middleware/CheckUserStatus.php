@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Services\PasswordValidationService;
 use Carbon\Carbon;
 
 /**
@@ -20,6 +21,22 @@ use Carbon\Carbon;
  */
 class CheckUserStatus
 {
+    /**
+     * Password validation service instance
+     * 
+     * @var PasswordValidationService
+     */
+    protected $passwordService;
+
+    /**
+     * Constructor
+     * 
+     * @param PasswordValidationService $passwordService
+     */
+    public function __construct(PasswordValidationService $passwordService)
+    {
+        $this->passwordService = $passwordService;
+    }
     /**
      * Password expiry days
      */
@@ -70,8 +87,8 @@ class CheckUserStatus
                 ->with('message', 'Please change your password to continue.');
         }
         
-        // Check password expiry
-        if ($this->isPasswordExpired($user)) {
+        // Check password expiry using service
+        if ($this->passwordService->isPasswordExpired($user)) {
             $this->logStatusCheck($request, $user, 'password_expired', 'Password has expired');
             return redirect()->route('password.expired')
                 ->with('message', 'Your password has expired. Please change it to continue.');

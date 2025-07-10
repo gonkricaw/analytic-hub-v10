@@ -663,6 +663,162 @@ class PasswordHistory extends Model
     }
 
     /**
+     * Check if password has been used before (last 5 passwords)
+     * 
+     * @param string $userId User UUID
+     * @param string $password Plain text password to check
+     * @return bool True if password was used before
+     */
+    public static function isPasswordReused(string $userId, string $password): bool
+    {
+        // Get last 5 password hashes for the user
+        $recentPasswords = self::where('user_id', $userId)
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->pluck('password_hash');
+        
+        // Check if any of the recent passwords match
+        foreach ($recentPasswords as $hash) {
+            if (Hash::check($password, $hash)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Add new password to history and cleanup old entries
+     * 
+     * @param string $userId User UUID
+     * @param string $password Plain text password
+     * @param array $options Additional options for password tracking
+     * @return PasswordHistory Created password history record
+     */
+    public static function addPasswordToHistory(string $userId, string $password, array $options = []): self
+    {
+        // Mark all previous passwords as not current
+        self::where('user_id', $userId)
+            ->where('is_current', true)
+            ->update(['is_current' => false, 'retired_at' => now()]);
+        
+        // Analyze password strength
+        $analysis = self::analyzePasswordStrength($password);
+        
+        // Create new password history record
+        $passwordHistory = self::create([
+            'user_id' => $userId,
+            'password_hash' => Hash::make($password),
+            'hash_algorithm' => 'bcrypt',
+            'hash_cost' => config('hashing.bcrypt.rounds', 12),
+            'is_current' => true,
+            'strength_score' => $analysis['score'],
+            'strength_analysis' => $analysis['analysis'],
+            'meets_policy' => $analysis['meets_policy'],
+            'policy_violations' => $analysis['violations'],
+            'change_reason' => $options['reason'] ?? self::CHANGE_REASON_USER_REQUESTED,
+            'change_method' => $options['method'] ?? self::CHANGE_METHOD_FORM,
+            'change_notes' => $options['notes'] ?? null,
+            'ip_address' => $options['ip_address'] ?? request()->ip(),
+            'user_agent' => $options['user_agent'] ?? request()->userAgent(),
+            'was_forced_change' => $options['forced'] ?? false,
+            'is_temporary' => $options['temporary'] ?? false,
+            'requires_change' => $options['requires_change'] ?? false,
+            'expires_at' => $options['expires_at'] ?? now()->addDays(90),
+            'created_by' => $options['created_by'] ?? auth()->id(),
+            'changed_by' => $options['changed_by'] ?? auth()->id(),
+        ]);
+        
+        // Cleanup old password history (keep only last 5)
+        self::cleanupOldPasswords($userId);
+        
+        return $passwordHistory;
+    }
+    
+    /**
+     * Cleanup old password history entries (keep only last 5)
+     * 
+     * @param string $userId User UUID
+     * @return int Number of deleted records
+     */
+    public static function cleanupOldPasswords(string $userId): int
+    {
+        // Get IDs of passwords to keep (last 5)
+        $keepIds = self::where('user_id', $userId)
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->pluck('id');
+        
+        // Delete older passwords
+        return self::where('user_id', $userId)
+            ->whereNotIn('id', $keepIds)
+            ->delete();
+    }
+    
+    /**
+     * Validate password against policy and history
+     * 
+     * @param string $userId User UUID
+     * @param string $password Plain text password
+     * @return array Validation result with errors if any
+     */
+    public static function validatePassword(string $userId, string $password): array
+    {
+        $errors = [];
+        
+        // Check password strength
+        $analysis = self::analyzePasswordStrength($password);
+        if (!$analysis['meets_policy']) {
+            $errors = array_merge($errors, $analysis['violations']);
+        }
+        
+        // Check password reuse
+        if (self::isPasswordReused($userId, $password)) {
+            $errors[] = 'Password has been used recently. Please choose a different password.';
+        }
+        
+        return [
+            'valid' => empty($errors),
+            'errors' => $errors,
+            'strength' => $analysis,
+        ];
+    }
+    
+    /**
+     * Get password expiry information for user
+     * 
+     * @param string $userId User UUID
+     * @return array Password expiry details
+     */
+    public static function getPasswordExpiry(string $userId): array
+    {
+        $current = self::where('user_id', $userId)
+            ->where('is_current', true)
+            ->first();
+        
+        if (!$current) {
+            return [
+                'has_password' => false,
+                'is_expired' => true,
+                'days_until_expiry' => 0,
+                'expires_at' => null,
+            ];
+        }
+        
+        $expiresAt = $current->expires_at;
+        $daysUntilExpiry = $expiresAt ? now()->diffInDays($expiresAt, false) : null;
+        
+        return [
+            'has_password' => true,
+            'is_expired' => $expiresAt && $expiresAt->isPast(),
+            'days_until_expiry' => $daysUntilExpiry,
+            'expires_at' => $expiresAt,
+            'age_in_days' => $current->getAgeInDays(),
+            'requires_change' => $current->requires_change,
+        ];
+    }
+
+    /**
      * Boot method to handle model events
      */
     protected static function boot()
