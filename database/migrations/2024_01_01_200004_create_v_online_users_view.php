@@ -36,35 +36,35 @@ return new class extends Migration
                 s.is_authenticated,
                 
                 -- Timing information
-                TO_TIMESTAMP(s.last_activity) as last_activity_timestamp,
+                FROM_UNIXTIME(s.last_activity) as last_activity_timestamp,
                 s.created_at as session_started_at,
                 s.expires_at as session_expires_at,
                 s.last_seen_at,
                 
                 -- Calculate session duration
-                EXTRACT(EPOCH FROM (TO_TIMESTAMP(s.last_activity) - s.created_at)) / 60 as session_duration_minutes,
+                TIMESTAMPDIFF(MINUTE, s.created_at, FROM_UNIXTIME(s.last_activity)) as session_duration_minutes,
                 
                 -- Calculate idle time
-                EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - TO_TIMESTAMP(s.last_activity))) / 60 as idle_minutes,
+                TIMESTAMPDIFF(MINUTE, FROM_UNIXTIME(s.last_activity), NOW()) as idle_minutes,
                 
                 -- Online status indicators
                 CASE 
-                    WHEN EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - TO_TIMESTAMP(s.last_activity))) <= 300 -- 5 minutes
+                    WHEN TIMESTAMPDIFF(SECOND, FROM_UNIXTIME(s.last_activity), NOW()) <= 300 -- 5 minutes
                     THEN 'online'
-                    WHEN EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - TO_TIMESTAMP(s.last_activity))) <= 900 -- 15 minutes
+                    WHEN TIMESTAMPDIFF(SECOND, FROM_UNIXTIME(s.last_activity), NOW()) <= 900 -- 15 minutes
                     THEN 'away'
-                    WHEN EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - TO_TIMESTAMP(s.last_activity))) <= 1800 -- 30 minutes
+                    WHEN TIMESTAMPDIFF(SECOND, FROM_UNIXTIME(s.last_activity), NOW()) <= 1800 -- 30 minutes
                     THEN 'idle'
                     ELSE 'offline'
                 END as online_status,
                 
                 -- Activity level
                 CASE 
-                    WHEN EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - TO_TIMESTAMP(s.last_activity))) <= 60 -- 1 minute
+                    WHEN TIMESTAMPDIFF(SECOND, FROM_UNIXTIME(s.last_activity), NOW()) <= 60 -- 1 minute
                     THEN 'very_active'
-                    WHEN EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - TO_TIMESTAMP(s.last_activity))) <= 300 -- 5 minutes
+                    WHEN TIMESTAMPDIFF(SECOND, FROM_UNIXTIME(s.last_activity), NOW()) <= 300 -- 5 minutes
                     THEN 'active'
-                    WHEN EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - TO_TIMESTAMP(s.last_activity))) <= 900 -- 15 minutes
+                    WHEN TIMESTAMPDIFF(SECOND, FROM_UNIXTIME(s.last_activity), NOW()) <= 900 -- 15 minutes
                     THEN 'moderate'
                     ELSE 'low'
                 END as activity_level,

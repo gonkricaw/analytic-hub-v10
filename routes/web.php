@@ -61,6 +61,21 @@ Route::middleware(['auth.user', 'check.status'])->group(function () {
 
 // Admin routes (requires admin role)
 Route::middleware(['auth.user', 'check.status', 'role:admin,super_admin'])->prefix('admin')->name('admin.')->group(function () {
+    // User management routes
+    Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
+    Route::post('users/{user}/toggle-status', [\App\Http\Controllers\Admin\UserController::class, 'toggleStatus'])->name('users.toggle-status');
+    Route::post('users/bulk-action', [\App\Http\Controllers\Admin\UserController::class, 'bulkAction'])->name('users.bulk-action');
+    
+    // User invitation routes
+    Route::get('invitations', [\App\Http\Controllers\Admin\InvitationController::class, 'index'])->name('invitations.index');
+    Route::post('invitations/send', [\App\Http\Controllers\Admin\InvitationController::class, 'send'])->name('invitations.send');
+    Route::post('invitations/resend', [\App\Http\Controllers\Admin\InvitationController::class, 'resend'])->name('invitations.resend');
+    Route::get('invitations/status', [\App\Http\Controllers\Admin\InvitationController::class, 'status'])->name('invitations.status');
+    Route::get('invitations/{user}/history', [\App\Http\Controllers\Admin\InvitationController::class, 'history'])->name('invitations.history');
+    Route::post('invitations/cancel', [\App\Http\Controllers\Admin\InvitationController::class, 'cancel'])->name('invitations.cancel');
+    Route::post('invitations/cleanup', [\App\Http\Controllers\Admin\InvitationController::class, 'cleanup'])->name('invitations.cleanup');
+    Route::get('invitations/stats', [\App\Http\Controllers\Admin\InvitationController::class, 'stats'])->name('invitations.stats');
+    
     // Role management routes
     Route::resource('roles', RoleController::class);
     Route::get('roles/{role}/permissions', [RoleController::class, 'getPermissions'])->name('roles.permissions');

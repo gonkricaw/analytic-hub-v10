@@ -82,5 +82,11 @@ class Kernel extends HttpKernel
         // Role & Permission Middleware
         'role' => \App\Http\Middleware\CheckRole::class,
         'permission' => \App\Http\Middleware\CheckPermission::class,
+        
+        // Additional Security & Compliance Middleware
+        'terms.check' => \App\Http\Middleware\CheckTermsAcceptance::class,
+        'password.expiry' => \App\Http\Middleware\CheckPasswordExpiry::class,
+        'activity.log' => \App\Http\Middleware\ActivityLogging::class,
+        'rate.limit' => \App\Http\Middleware\RateLimiting::class,
     ];
 }

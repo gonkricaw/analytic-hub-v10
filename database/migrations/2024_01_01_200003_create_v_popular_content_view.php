@@ -33,28 +33,28 @@ return new class extends Migration
                 -- Activity-based view tracking (last 30 days)
                 COUNT(CASE 
                     WHEN ua.activity_type = 'content_view' 
-                    AND ua.created_at >= CURRENT_DATE - INTERVAL '30 days'
+                    AND ua.created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
                     THEN 1 
                 END) as views_last_30_days,
                 
                 -- Activity-based view tracking (last 7 days)
                 COUNT(CASE 
                     WHEN ua.activity_type = 'content_view' 
-                    AND ua.created_at >= CURRENT_DATE - INTERVAL '7 days'
+                    AND ua.created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
                     THEN 1 
                 END) as views_last_7_days,
                 
                 -- Activity-based view tracking (today)
                 COUNT(CASE 
                     WHEN ua.activity_type = 'content_view' 
-                    AND DATE(ua.created_at) = CURRENT_DATE
+                    AND DATE(ua.created_at) = CURDATE()
                     THEN 1 
                 END) as views_today,
                 
                 -- Unique viewers (last 30 days)
                 COUNT(DISTINCT CASE 
                     WHEN ua.activity_type = 'content_view' 
-                    AND ua.created_at >= CURRENT_DATE - INTERVAL '30 days'
+                    AND ua.created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
                     AND ua.user_id IS NOT NULL
                     THEN ua.user_id 
                 END) as unique_viewers_30_days,
@@ -62,7 +62,7 @@ return new class extends Migration
                 -- Unique viewers (last 7 days)
                 COUNT(DISTINCT CASE 
                     WHEN ua.activity_type = 'content_view' 
-                    AND ua.created_at >= CURRENT_DATE - INTERVAL '7 days'
+                    AND ua.created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
                     AND ua.user_id IS NOT NULL
                     THEN ua.user_id 
                 END) as unique_viewers_7_days,
@@ -71,7 +71,7 @@ return new class extends Migration
                 ROUND(
                     COUNT(CASE 
                         WHEN ua.activity_type = 'content_view' 
-                        AND ua.created_at >= CURRENT_DATE - INTERVAL '30 days'
+                        AND ua.created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
                         THEN 1 
                     END) / 30.0, 2
                 ) as avg_daily_views_30_days,

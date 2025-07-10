@@ -15,13 +15,12 @@ return new class extends Migration
     {
         DB::statement("
             CREATE VIEW v_login_trends AS
-            WITH date_series AS (
-                SELECT 
-                    generate_series(
-                        CURRENT_DATE - INTERVAL '14 days',
-                        CURRENT_DATE,
-                        INTERVAL '1 day'
-                    )::date as login_date
+            WITH RECURSIVE date_series AS (
+                SELECT DATE_SUB(CURDATE(), INTERVAL 14 DAY) as login_date
+                UNION ALL
+                SELECT DATE_ADD(login_date, INTERVAL 1 DAY)
+                FROM date_series
+                WHERE login_date < CURDATE()
             ),
             daily_stats AS (
                 SELECT 
@@ -63,12 +62,19 @@ return new class extends Migration
                         THEN 1 
                     END) as first_time_logins,
                     
-                    -- Peak hour of the day
-                    MODE() WITHIN GROUP (ORDER BY EXTRACT(HOUR FROM la.attempted_at)) as peak_hour,
+                    -- Peak hour of the day (most common hour)
+                    (
+                        SELECT HOUR(attempted_at) 
+                        FROM idbi_login_attempts la2 
+                        WHERE DATE(la2.attempted_at) = DATE(la.attempted_at)
+                        GROUP BY HOUR(attempted_at) 
+                        ORDER BY COUNT(*) DESC 
+                        LIMIT 1
+                    ) as peak_hour,
                     
                     -- Average attempts per user
                     ROUND(
-                        COUNT(*)::numeric / NULLIF(COUNT(DISTINCT la.user_id), 0), 2
+                        COUNT(*) / NULLIF(COUNT(DISTINCT la.user_id), 0), 2
                     ) as avg_attempts_per_user,
                     
                     -- Success rate percentage
@@ -95,17 +101,17 @@ return new class extends Migration
                     ROUND(AVG(la.risk_score), 2) as avg_risk_score
                     
                 FROM idbi_login_attempts la
-                WHERE la.attempted_at >= CURRENT_DATE - INTERVAL '14 days'
-                AND la.attempted_at <= CURRENT_DATE + INTERVAL '1 day'
+                WHERE la.attempted_at >= DATE_SUB(CURDATE(), INTERVAL 14 DAY)
+                AND la.attempted_at <= DATE_ADD(CURDATE(), INTERVAL 1 DAY)
                 GROUP BY DATE(la.attempted_at)
             )
             SELECT 
                 ds.login_date,
                 
                 -- Day information
-                TO_CHAR(ds.login_date, 'Day') as day_name,
-                TO_CHAR(ds.login_date, 'DD/MM/YYYY') as formatted_date,
-                EXTRACT(DOW FROM ds.login_date) as day_of_week, -- 0=Sunday, 6=Saturday
+                DAYNAME(ds.login_date) as day_name,
+                DATE_FORMAT(ds.login_date, '%d/%m/%Y') as formatted_date,
+                DAYOFWEEK(ds.login_date) - 1 as day_of_week, -- 0=Sunday, 6=Saturday
                 
                 -- Login statistics (with 0 defaults for days with no data)
                 COALESCE(dst.successful_logins, 0) as successful_logins,
