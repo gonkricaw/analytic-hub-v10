@@ -4,9 +4,11 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PasswordChangeController;
 use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RolePermissionController;
+use App\Http\Controllers\Admin\MenuController;
 
 /*
 |--------------------------------------------------------------------------
@@ -50,13 +52,14 @@ Route::middleware(['auth.user', 'check.status'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     
     // Profile management
-    Route::get('/profile', function () {
-        return view('profile.show');
-    })->name('profile.show');
-    
-    Route::put('/profile', function () {
-        // Profile update logic
-    })->name('profile.update');
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/avatar/upload', [ProfileController::class, 'uploadAvatar'])->name('profile.avatar.upload');
+    Route::delete('/profile/avatar/remove', [ProfileController::class, 'removeAvatar'])->name('profile.avatar.remove');
+    Route::put('/profile/password', [ProfileController::class, 'changePassword'])->name('profile.password.change');
+    Route::get('/profile/activity', [ProfileController::class, 'getActivityHistory'])->name('profile.activity');
+    Route::put('/profile/notifications', [ProfileController::class, 'updateNotificationPreferences'])->name('profile.notifications.update');
 });
 
 // Admin routes (requires admin role)
@@ -103,6 +106,14 @@ Route::middleware(['auth.user', 'check.status', 'role:admin,super_admin'])->pref
     Route::get('/permissions/hierarchy', [PermissionController::class, 'hierarchy'])->name('permissions.hierarchy');
     Route::post('/permissions/{permission}/children', [PermissionController::class, 'addChild'])->name('permissions.add-child');
     Route::delete('/permissions/{permission}/children/{child}', [PermissionController::class, 'removeChild'])->name('permissions.remove-child');
+    
+    // Menu management routes
+    Route::resource('menus', MenuController::class);
+    Route::get('menus/data/table', [MenuController::class, 'getData'])->name('menus.data');
+    Route::post('menus/{menu}/duplicate', [MenuController::class, 'duplicate'])->name('menus.duplicate');
+    Route::post('menus/{menu}/toggle-status', [MenuController::class, 'toggleStatus'])->name('menus.toggle-status');
+    Route::post('menus/update-order', [MenuController::class, 'updateOrder'])->name('menus.update-order');
+    Route::get('menus/{menu}/preview', [MenuController::class, 'preview'])->name('menus.preview');
 });
 
 // Special authentication flow routes (accessible when authenticated but with specific conditions)
