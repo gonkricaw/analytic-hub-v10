@@ -79,7 +79,7 @@ return new class extends Migration
         });
 
         // Indexes for v_online_users view optimization
-        Schema::table('idbi_sessions', function (Blueprint $table) {
+        Schema::table('sessions', function (Blueprint $table) {
             // Composite index for active session tracking
             $table->index(['is_active', 'is_authenticated', 'last_activity'], 'idx_sessions_active_tracking');
             
@@ -150,7 +150,7 @@ return new class extends Migration
             
             DB::statement("
                 CREATE INDEX CONCURRENTLY idx_sessions_online_partial 
-                ON idbi_sessions (user_id, last_activity, ip_address) 
+                ON sessions (user_id, last_activity, ip_address) 
                 WHERE is_active = true AND is_authenticated = true
             ");
             
@@ -211,8 +211,8 @@ return new class extends Migration
             $table->dropIndex('idx_activities_url_tracking');
         });
 
-        // Drop indexes from idbi_sessions
-        Schema::table('idbi_sessions', function (Blueprint $table) {
+        // Drop indexes from sessions
+            Schema::table('sessions', function (Blueprint $table) {
             $table->dropIndex('idx_sessions_active_tracking');
             $table->dropIndex('idx_sessions_user_active');
             $table->dropIndex('idx_sessions_expiration');

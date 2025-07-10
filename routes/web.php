@@ -4,6 +4,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PasswordChangeController;
 use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\RolePermissionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -54,6 +57,37 @@ Route::middleware(['auth.user', 'check.status'])->group(function () {
     Route::put('/profile', function () {
         // Profile update logic
     })->name('profile.update');
+});
+
+// Admin routes (requires admin role)
+Route::middleware(['auth.user', 'check.status', 'role:admin,super_admin'])->prefix('admin')->name('admin.')->group(function () {
+    // Role management routes
+    Route::resource('roles', RoleController::class);
+    Route::get('roles/{role}/permissions', [RoleController::class, 'getPermissions'])->name('roles.permissions');
+    Route::put('roles/{role}/permissions', [RoleController::class, 'updatePermissions'])->name('roles.permissions.update');
+    
+    // Permission management routes
+    Route::resource('permissions', PermissionController::class);
+    Route::get('permissions/{permission}/roles', [PermissionController::class, 'getRoles'])->name('permissions.roles');
+    Route::put('permissions/{permission}/roles', [PermissionController::class, 'updateRoles'])->name('permissions.roles.update');
+    Route::get('permissions/hierarchy/tree', [PermissionController::class, 'getHierarchy'])->name('permissions.hierarchy');
+    
+    // Role-Permission Assignment Routes
+    Route::get('/role-permissions', [RolePermissionController::class, 'index'])->name('role-permissions.index');
+    Route::get('/role-permissions/matrix-data', [RolePermissionController::class, 'getMatrixData'])->name('role-permissions.matrix-data');
+    Route::post('/role-permissions/assign', [RolePermissionController::class, 'assignPermission'])->name('role-permissions.assign');
+    Route::delete('/role-permissions/remove', [RolePermissionController::class, 'removePermission'])->name('role-permissions.remove');
+    Route::post('/role-permissions/bulk-assign', [RolePermissionController::class, 'bulkAssign'])->name('role-permissions.bulk-assign');
+    Route::post('/role-permissions/sync', [RolePermissionController::class, 'syncPermissions'])->name('role-permissions.sync');
+    
+    // Legacy Role-Permission Routes (for backward compatibility)
+    Route::post('/roles/{role}/permissions', [RoleController::class, 'assignPermissions'])->name('roles.assign-permissions');
+    Route::delete('/roles/{role}/permissions/{permission}', [RoleController::class, 'removePermission'])->name('roles.remove-permission');
+    
+    // Permission Hierarchy Routes
+    Route::get('/permissions/hierarchy', [PermissionController::class, 'hierarchy'])->name('permissions.hierarchy');
+    Route::post('/permissions/{permission}/children', [PermissionController::class, 'addChild'])->name('permissions.add-child');
+    Route::delete('/permissions/{permission}/children/{child}', [PermissionController::class, 'removeChild'])->name('permissions.remove-child');
 });
 
 // Special authentication flow routes (accessible when authenticated but with specific conditions)

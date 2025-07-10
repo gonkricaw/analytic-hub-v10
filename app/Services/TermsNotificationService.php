@@ -48,19 +48,20 @@ class TermsNotificationService
 
             // Log the version update
             ActivityLog::create([
-                'user_id' => auth()->id(),
+                'causer_id' => auth()->id(),
+                'event' => 'updated',
                 'action' => 'terms_version_updated',
                 'description' => "Terms & Conditions updated from version {$currentVersion} to {$newVersion}",
-                'model_type' => 'SystemConfig',
-                'model_id' => null,
+                'subject_type' => 'SystemConfig',
+                'subject_id' => null,
                 'ip_address' => request()->ip(),
                 'user_agent' => request()->userAgent(),
                 'severity' => 'medium',
-                'context' => [
+                'properties' => json_encode([
                     'old_version' => $currentVersion,
                     'new_version' => $newVersion,
                     'reason' => $reason
-                ]
+                ])
             ]);
 
             // Send notifications if enabled

@@ -134,7 +134,7 @@ return new class extends Migration
                 -- Multiple sessions indicator
                 (
                     SELECT COUNT(*)
-                    FROM idbi_sessions s2
+                    FROM sessions s2
                     WHERE s2.user_id = u.id
                     AND s2.is_active = true
                     AND s2.is_authenticated = true
@@ -194,7 +194,7 @@ return new class extends Migration
                     ELSE 'low'
                 END as productivity_level
                 
-            FROM idbi_sessions s
+            FROM sessions s
             INNER JOIN idbi_users u ON s.user_id = u.id
             WHERE s.is_active = true
             AND s.is_authenticated = true

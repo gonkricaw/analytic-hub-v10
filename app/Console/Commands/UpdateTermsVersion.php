@@ -22,7 +22,7 @@ class UpdateTermsVersion extends Command
      */
     protected $signature = 'terms:update-version 
                             {version? : New version number (e.g., 1.1, 2.0)} 
-                            {--reason= : Reason for the update} 
+                            {reason? : Reason for the update} 
                             {--no-notify : Skip sending notifications to users} 
                             {--stats : Show current T&C statistics}';
 
@@ -65,7 +65,7 @@ class UpdateTermsVersion extends Command
         }
 
         $newVersion = $this->argument('version');
-        $reason = $this->option('reason');
+        $reason = $this->argument('reason');
         $skipNotifications = $this->option('no-notify');
 
         // If no version provided and not showing stats, show error
@@ -97,9 +97,13 @@ class UpdateTermsVersion extends Command
             $this->info("Notifications will be sent to {$usersCount} active users.");
         }
 
-        if (!$this->confirm('Do you want to proceed with the update?')) {
+        if (!$this->option('no-interaction') && !$this->confirm('Do you want to proceed with the update?')) {
             $this->info('Update cancelled.');
             return Command::SUCCESS;
+        }
+        
+        if ($this->option('no-interaction')) {
+            $this->info('Proceeding with update (no-interaction mode)...');
         }
 
         // Temporarily disable notifications if requested

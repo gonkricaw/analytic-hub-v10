@@ -78,5 +78,9 @@ class Kernel extends HttpKernel
         'check.status' => \App\Http\Middleware\CheckUserStatus::class,
         'blacklist.check' => \App\Http\Middleware\CheckBlacklistedIp::class,
         'csrf.enhanced' => \App\Http\Middleware\EnhancedCsrfProtection::class,
+        
+        // Role & Permission Middleware
+        'role' => \App\Http\Middleware\CheckRole::class,
+        'permission' => \App\Http\Middleware\CheckPermission::class,
     ];
 }

@@ -274,4 +274,186 @@ class User extends Authenticatable
     {
         return $query->where('last_login_at', '>=', now()->subDays($days));
     }
+
+    /**
+     * Check if user has a specific role.
+     * 
+     * @param string $roleName
+     * @return bool
+     */
+    public function hasRole(string $roleName): bool
+    {
+        return $this->roles()->where('name', $roleName)->where('status', 'active')->exists();
+    }
+
+    /**
+     * Check if user has any of the given roles.
+     * 
+     * @param array|string $roles
+     * @return bool
+     */
+    public function hasAnyRole($roles): bool
+    {
+        if (is_string($roles)) {
+            $roles = [$roles];
+        }
+
+        return $this->roles()->whereIn('name', $roles)->where('status', 'active')->exists();
+    }
+
+    /**
+     * Check if user has all of the given roles.
+     * 
+     * @param array|string $roles
+     * @return bool
+     */
+    public function hasAllRoles($roles): bool
+    {
+        if (is_string($roles)) {
+            $roles = [$roles];
+        }
+
+        $userRoles = $this->roles()->where('status', 'active')->pluck('name')->toArray();
+        
+        foreach ($roles as $role) {
+            if (!in_array($role, $userRoles)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if user has a specific permission.
+     * 
+     * @param string $permissionName
+     * @return bool
+     */
+    public function hasPermission(string $permissionName): bool
+    {
+        // Check through roles
+        foreach ($this->roles()->where('status', 'active')->get() as $role) {
+            if ($role->hasPermission($permissionName)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if user has any of the given permissions.
+     * 
+     * @param array|string $permissions
+     * @return bool
+     */
+    public function hasAnyPermission($permissions): bool
+    {
+        if (is_string($permissions)) {
+            $permissions = [$permissions];
+        }
+
+        foreach ($permissions as $permission) {
+            if ($this->hasPermission($permission)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if user has all of the given permissions.
+     * 
+     * @param array|string $permissions
+     * @return bool
+     */
+    public function hasAllPermissions($permissions): bool
+    {
+        if (is_string($permissions)) {
+            $permissions = [$permissions];
+        }
+
+        foreach ($permissions as $permission) {
+            if (!$this->hasPermission($permission)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Get all user permissions through roles.
+     * 
+     * @return \Illuminate\Support\Collection
+     */
+    public function getAllPermissions()
+    {
+        $permissions = collect();
+        
+        foreach ($this->roles()->where('status', 'active')->get() as $role) {
+            $rolePermissions = $role->permissions()->where('status', 'active')->get();
+            $permissions = $permissions->merge($rolePermissions);
+        }
+
+        return $permissions->unique('id');
+    }
+
+    /**
+     * Assign a role to the user.
+     * 
+     * @param string|Role $role
+     * @return void
+     */
+    public function assignRole($role): void
+    {
+        if (is_string($role)) {
+            $role = Role::where('name', $role)->firstOrFail();
+        }
+
+        if (!$this->hasRole($role->name)) {
+            $this->roles()->attach($role->id);
+        }
+    }
+
+    /**
+     * Remove a role from the user.
+     * 
+     * @param string|Role $role
+     * @return void
+     */
+    public function removeRole($role): void
+    {
+        if (is_string($role)) {
+            $role = Role::where('name', $role)->firstOrFail();
+        }
+
+        $this->roles()->detach($role->id);
+    }
+
+    /**
+     * Sync user roles.
+     * 
+     * @param array $roles
+     * @return void
+     */
+    public function syncRoles(array $roles): void
+    {
+        $roleIds = [];
+        
+        foreach ($roles as $role) {
+            if (is_string($role)) {
+                $roleModel = Role::where('name', $role)->first();
+                if ($roleModel) {
+                    $roleIds[] = $roleModel->id;
+                }
+            } elseif ($role instanceof Role) {
+                $roleIds[] = $role->id;
+            }
+        }
+
+        $this->roles()->sync($roleIds);
+    }
 }

@@ -86,7 +86,7 @@ return [
     |
     */
 
-    'table' => env('SESSION_TABLE', 'idbi_sessions'), // Use Analytics Hub naming convention
+    'table' => env('SESSION_TABLE', 'sessions'), // Use default Laravel sessions table
 
     /*
     |--------------------------------------------------------------------------

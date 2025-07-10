@@ -66,7 +66,7 @@ return new class extends Migration
             'idbi_user_avatars',
             'idbi_login_attempts',
             'idbi_password_histories',
-            'idbi_sessions'
+            'sessions'
         ];
 
         foreach ($requiredTables as $table) {
@@ -107,7 +107,7 @@ return new class extends Migration
         $criticalIndexes = [
             'idbi_users' => ['idx_users_status_deleted', 'idx_users_email_status'],
             'idbi_login_attempts' => ['idx_login_attempts_user_status_date', 'idx_login_trends_analysis'],
-            'idbi_sessions' => ['idx_sessions_active_tracking', 'idx_sessions_user_active'],
+            'sessions' => ['idx_sessions_active_tracking', 'idx_sessions_user_active'],
             'idbi_user_activities' => ['idx_activities_content_views', 'idx_activities_session_tracking'],
             'idbi_contents' => ['idx_contents_published_status', 'idx_contents_slug_status']
         ];
@@ -232,7 +232,7 @@ return new class extends Migration
             ]);
             
             // Insert test session
-            DB::table('idbi_sessions')->insert([
+            DB::table('sessions')->insert([
                 'id' => $testSessionId,
                 'user_id' => $testUserId,
                 'user_email' => 'test-migration@example.com',
@@ -290,7 +290,7 @@ return new class extends Migration
             // Clean up test data
             DB::table('idbi_user_activities')->where('user_id', $testUserId)->delete();
             DB::table('idbi_login_attempts')->where('user_id', $testUserId)->delete();
-            DB::table('idbi_sessions')->where('id', $testSessionId)->delete();
+            DB::table('sessions')->where('id', $testSessionId)->delete();
             DB::table('idbi_contents')->where('id', $testContentId)->delete();
             DB::table('idbi_user_roles')->where('user_id', $testUserId)->delete();
             DB::table('idbi_users')->where('id', $testUserId)->delete();
