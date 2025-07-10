@@ -103,20 +103,20 @@
 - [x] Implement CSRF protection on all forms
 
 ### **8. Password Management**
-- [ ] Create password validation rules (8 chars, mixed case, numbers, special)
-- [ ] Implement password history tracking (last 5)
-- [ ] Create password expiry check (90 days)
-- [ ] Build forgot password functionality
-- [ ] Implement password reset with UUID tokens
-- [ ] Add token expiry (120 minutes)
-- [ ] Implement 30-second cooldown between requests
-- [ ] Create force password change on first login
+- [x] Create password validation rules (8 chars, mixed case, numbers, special)
+- [x] Implement password history tracking (last 5)
+- [x] Create password expiry check (90 days)
+- [x] Build forgot password functionality
+- [x] Implement password reset with UUID tokens
+- [x] Add token expiry (120 minutes)
+- [x] Implement 30-second cooldown between requests
+- [x] Create force password change on first login
 
 ### **9. Terms & Conditions**
-- [ ] Create T&C acceptance tracking in database
-- [ ] Build T&C modal component
-- [ ] Implement force T&C on first login
-- [ ] Add T&C acceptance logging
+- [x] Create T&C acceptance tracking
+- [x] Build T&C modal component
+- [x] Implement force acceptance on first login
+- [x] Add T&C acceptance logging
 - [ ] Create T&C update notification system
 
 ---

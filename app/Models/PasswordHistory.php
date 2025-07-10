@@ -502,6 +502,17 @@ class PasswordHistory extends Model
     }
 
     /**
+     * Analyze password strength (alias for calculateStrengthScore)
+     * 
+     * @param string $password Plain text password
+     * @return array Strength analysis result
+     */
+    public static function analyzePasswordStrength(string $password): array
+    {
+        return self::calculateStrengthScore($password);
+    }
+
+    /**
      * Create password history entry
      */
     public static function createEntry(array $data): self

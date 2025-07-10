@@ -6,7 +6,9 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Services\PasswordValidationService;
+use App\Services\TermsNotificationService;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class CheckUserStatus
@@ -29,13 +31,22 @@ class CheckUserStatus
     protected $passwordService;
 
     /**
+     * Terms notification service instance
+     * 
+     * @var TermsNotificationService
+     */
+    protected $termsService;
+
+    /**
      * Constructor
      * 
      * @param PasswordValidationService $passwordService
+     * @param TermsNotificationService $termsService
      */
-    public function __construct(PasswordValidationService $passwordService)
+    public function __construct(PasswordValidationService $passwordService, TermsNotificationService $termsService)
     {
         $this->passwordService = $passwordService;
+        $this->termsService = $termsService;
     }
     /**
      * Password expiry days
@@ -95,10 +106,15 @@ class CheckUserStatus
         }
         
         // Check if Terms & Conditions acceptance is required
-        if (!$user->terms_accepted_at) {
-            $this->logStatusCheck($request, $user, 'terms_not_accepted', 'Terms & Conditions not accepted');
+        if ($this->termsService->userNeedsReacceptance($user)) {
+            $currentVersion = $this->termsService->getCurrentVersion();
+            $userVersion = $user->terms_version_accepted ?? 'none';
+            
+            $this->logStatusCheck($request, $user, 'terms_reacceptance_required', 
+                "Terms & Conditions re-acceptance required. Current: {$currentVersion}, User: {$userVersion}");
+            
             return redirect()->route('terms.accept')
-                ->with('message', 'Please accept the Terms & Conditions to continue.');
+                ->with('message', 'Our Terms & Conditions have been updated. Please review and accept the new terms to continue.');
         }
         
         // Update last seen timestamp

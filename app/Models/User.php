@@ -82,6 +82,7 @@ class User extends Authenticatable
         'status',
         'terms_accepted',
         'terms_accepted_at',
+        'terms_version_accepted',
         'email_notifications',
         'bio',
         'phone',

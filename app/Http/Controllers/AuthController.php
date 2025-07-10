@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\LoginAttempt;
 use App\Models\BlacklistedIp;
 use App\Models\ActivityLog;
+use App\Services\TermsNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -378,6 +379,45 @@ class AuthController extends Controller
     {
         $lastActivity = session('last_activity', time());
         return (int) ((time() - $lastActivity) / 60);
+    }
+
+    /**
+     * Accept Terms & Conditions
+     * 
+     * @param Request $request
+     * @param TermsNotificationService $termsService
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function acceptTerms(Request $request, TermsNotificationService $termsService)
+    {
+        $request->validate([
+            'accept_terms' => 'required|accepted'
+        ], [
+            'accept_terms.required' => 'You must accept the Terms & Conditions to continue.',
+            'accept_terms.accepted' => 'You must accept the Terms & Conditions to continue.'
+        ]);
+
+        $user = Auth::user();
+        
+        if (!$user) {
+            return redirect()->route('login')
+                ->with('error', 'Please log in to accept Terms & Conditions.');
+        }
+
+        // Mark user acceptance using the terms service
+        $success = $termsService->markUserAcceptance($user);
+        
+        if (!$success) {
+            return redirect()->back()
+                ->with('error', 'Failed to record Terms & Conditions acceptance. Please try again.');
+        }
+
+        // Redirect to intended page or dashboard
+        $intendedUrl = session('url.intended', route('dashboard'));
+        session()->forget('url.intended');
+        
+        return redirect($intendedUrl)
+            ->with('success', 'Terms & Conditions accepted successfully.');
     }
 
     /**
