@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RolePermissionController;
 use App\Http\Controllers\Admin\MenuController;
+use App\Http\Controllers\Admin\ContentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -47,6 +48,12 @@ Route::middleware(['auth.user', 'check.status'])->group(function () {
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
+    
+    // Public content viewing routes
+    Route::get('/content/{slug}', [\App\Http\Controllers\ContentViewController::class, 'show'])->name('content.show');
+    Route::get('/content/{uuid}/embed', [\App\Http\Controllers\ContentViewController::class, 'embed'])->name('content.embed');
+    Route::post('/content/{uuid}/access-token', [\App\Http\Controllers\ContentViewController::class, 'generateAccessToken'])->name('content.access-token');
+    Route::get('/content/secure/{token}', [\App\Http\Controllers\ContentViewController::class, 'secureView'])->name('content.secure-view');
     
     // Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -130,6 +137,21 @@ Route::middleware(['auth.user', 'check.status', 'role:admin,super_admin'])->pref
     Route::get('menus/{menu}/roles', [MenuController::class, 'showRoleAssignment'])->name('menus.roles');
     Route::post('menus/{menu}/roles/assign', [MenuController::class, 'assignRoles'])->name('menus.assign-roles');
     Route::delete('menus/{menu}/roles/{role}', [MenuController::class, 'removeRole'])->name('menus.remove-role');
+    
+    // Content management routes
+    Route::resource('contents', ContentController::class);
+    Route::get('contents/{content}/preview', [ContentController::class, 'preview'])->name('contents.preview');
+    Route::post('contents/{content}/duplicate', [ContentController::class, 'duplicate'])->name('contents.duplicate');
+    Route::post('contents/{content}/toggle-status', [ContentController::class, 'toggleStatus'])->name('contents.toggle-status');
+    Route::get('contents/{content}/versions', [ContentController::class, 'versions'])->name('contents.versions');
+    Route::post('contents/{content}/restore/{version}', [ContentController::class, 'restoreVersion'])->name('contents.restore-version');
+    Route::get('contents/data/table', [ContentController::class, 'getData'])->name('contents.data');
+    Route::post('contents/bulk-action', [ContentController::class, 'bulkAction'])->name('contents.bulk-action');
+    
+    // Upload routes for content editor
+    Route::post('upload/image', [\App\Http\Controllers\Admin\UploadController::class, 'uploadImage'])->name('upload.image');
+    Route::post('upload/file', [\App\Http\Controllers\Admin\UploadController::class, 'uploadFile'])->name('upload.file');
+    Route::delete('upload/file', [\App\Http\Controllers\Admin\UploadController::class, 'deleteFile'])->name('upload.delete');
 });
 
 // Special authentication flow routes (accessible when authenticated but with specific conditions)
