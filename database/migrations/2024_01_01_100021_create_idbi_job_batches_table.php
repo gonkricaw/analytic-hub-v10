@@ -132,7 +132,7 @@ return new class extends Migration
             
             // Foreign key constraints
             $table->foreign('user_id')->references('id')->on('idbi_users')->onDelete('set null');
-            $table->foreign('parent_batch_id')->references('id')->on('idbi_job_batches')->onDelete('set null');
+            // Note: parent_batch_id self-reference removed due to PostgreSQL constraint issues
             $table->foreign('created_by')->references('id')->on('idbi_users')->onDelete('set null');
             $table->foreign('updated_by')->references('id')->on('idbi_users')->onDelete('set null');
             

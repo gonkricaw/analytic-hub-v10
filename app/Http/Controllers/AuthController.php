@@ -205,6 +205,11 @@ class AuthController extends Controller
      */
     private function isIpBlacklisted(string $ipAddress): bool
     {
+        // Check if the blacklisted_ips table exists before querying
+        if (!\Illuminate\Support\Facades\Schema::hasTable('idbi_blacklisted_ips')) {
+            return false;
+        }
+        
         return BlacklistedIp::where('ip_address', $ipAddress)
             ->where('status', 'active')
             ->where(function ($query) {
@@ -259,6 +264,11 @@ class AuthController extends Controller
      */
     private function blacklistIp(string $ipAddress, string $userAgent, string $email): void
     {
+        // Check if the blacklisted_ips table exists before creating record
+        if (!\Illuminate\Support\Facades\Schema::hasTable('idbi_blacklisted_ips')) {
+            return;
+        }
+        
         BlacklistedIp::create([
             'ip_address' => $ipAddress,
             'reason' => 'Exceeded maximum failed login attempts (' . self::MAX_FAILED_ATTEMPTS . ')',
@@ -300,6 +310,11 @@ class AuthController extends Controller
      */
     private function resetFailedAttempts(string $ipAddress): void
     {
+        // Check if the blacklisted_ips table exists before querying
+        if (!\Illuminate\Support\Facades\Schema::hasTable('idbi_blacklisted_ips')) {
+            return;
+        }
+        
         // Remove any active blacklist for this IP
         BlacklistedIp::where('ip_address', $ipAddress)
             ->where('status', 'active')

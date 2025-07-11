@@ -68,7 +68,6 @@ return new class extends Migration
             $table->softDeletes();
             
             // Foreign key constraints
-            $table->foreign('parent_template_id')->references('id')->on('idbi_email_templates')->onDelete('set null');
             $table->foreign('created_by')->references('id')->on('idbi_users')->onDelete('set null');
             $table->foreign('updated_by')->references('id')->on('idbi_users')->onDelete('set null');
             
@@ -84,6 +83,11 @@ return new class extends Migration
             $table->index(['last_used_at']);
             $table->index(['created_by']);
             $table->index(['updated_by']);
+        });
+        
+        // Add self-referencing foreign key after table creation
+        Schema::table('idbi_email_templates', function (Blueprint $table) {
+            $table->foreign('parent_template_id')->references('id')->on('idbi_email_templates')->onDelete('set null');
         });
     }
 

@@ -47,9 +47,6 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
             
-            // Foreign key constraints
-            $table->foreign('parent_id')->references('id')->on('idbi_permissions')->onDelete('cascade');
-            
             // Indexes for performance
             $table->index(['name', 'status']);
             $table->index(['module', 'action']);
@@ -58,6 +55,11 @@ return new class extends Migration
             $table->index(['is_system_permission']);
             $table->index(['created_by']);
             $table->index(['updated_by']);
+        });
+        
+        // Add self-referencing foreign key constraint after table creation
+        Schema::table('idbi_permissions', function (Blueprint $table) {
+            $table->foreign('parent_id')->references('id')->on('idbi_permissions')->onDelete('cascade');
         });
     }
 

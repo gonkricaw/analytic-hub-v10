@@ -81,22 +81,16 @@ return new class extends Migration
         // Indexes for v_online_users view optimization
         Schema::table('sessions', function (Blueprint $table) {
             // Composite index for active session tracking
-            $table->index(['is_active', 'is_authenticated', 'last_activity'], 'idx_sessions_active_tracking');
+            $table->index(['user_id', 'last_activity'], 'idx_sessions_user_activity');
             
-            // Index for user session correlation
-            $table->index(['user_id', 'is_active', 'last_activity'], 'idx_sessions_user_active');
+            // Index for session activity analysis
+            $table->index(['last_activity', 'user_id'], 'idx_sessions_activity_user');
             
-            // Index for session expiration management
-            $table->index(['expires_at', 'is_active'], 'idx_sessions_expiration');
+            // Index for IP-based session tracking
+            $table->index(['ip_address', 'last_activity'], 'idx_sessions_ip_activity');
             
-            // Index for security monitoring
-            $table->index(['is_suspicious', 'risk_score', 'last_activity'], 'idx_sessions_security');
-            
-            // Index for geographic analysis
-            $table->index(['country', 'region', 'last_activity'], 'idx_sessions_geographic');
-            
-            // Index for device tracking
-            $table->index(['device_type', 'browser', 'last_activity'], 'idx_sessions_device');
+            // Index for user agent analysis
+            $table->index(['user_agent', 'last_activity'], 'idx_sessions_user_agent');
         });
 
         Schema::table('idbi_user_activities', function (Blueprint $table) {
@@ -137,27 +131,27 @@ return new class extends Migration
         if (config('database.default') === 'pgsql') {
             // Create partial indexes for active records only
             DB::statement("
-                CREATE INDEX CONCURRENTLY idx_users_active_partial 
+                CREATE INDEX idx_users_active_partial 
                 ON idbi_users (id, email, status) 
                 WHERE deleted_at IS NULL AND status = 'active'
             ");
             
             DB::statement("
-                CREATE INDEX CONCURRENTLY idx_contents_published_partial 
+                CREATE INDEX idx_contents_published_partial 
                 ON idbi_contents (id, slug, view_count) 
                 WHERE deleted_at IS NULL AND status = 'published'
             ");
             
             DB::statement("
-                CREATE INDEX CONCURRENTLY idx_sessions_online_partial 
+                CREATE INDEX idx_sessions_online_partial 
                 ON sessions (user_id, last_activity, ip_address) 
-                WHERE is_active = true AND is_authenticated = true
+                WHERE user_id IS NOT NULL
             ");
             
             DB::statement("
-                CREATE INDEX CONCURRENTLY idx_login_attempts_recent_partial 
+                CREATE INDEX idx_login_attempts_recent_partial 
                 ON idbi_login_attempts (user_id, attempted_at, status) 
-                WHERE attempted_at >= CURRENT_DATE - INTERVAL '30 days'
+                WHERE status IN ('success', 'failed')
             ");
         }
     }
@@ -213,20 +207,18 @@ return new class extends Migration
 
         // Drop indexes from sessions
             Schema::table('sessions', function (Blueprint $table) {
-            $table->dropIndex('idx_sessions_active_tracking');
-            $table->dropIndex('idx_sessions_user_active');
-            $table->dropIndex('idx_sessions_expiration');
-            $table->dropIndex('idx_sessions_security');
-            $table->dropIndex('idx_sessions_geographic');
-            $table->dropIndex('idx_sessions_device');
+            $table->dropIndex('idx_sessions_user_activity');
+            $table->dropIndex('idx_sessions_activity_user');
+            $table->dropIndex('idx_sessions_ip_activity');
+            $table->dropIndex('idx_sessions_user_agent');
         });
 
         // Drop partial indexes if PostgreSQL
         if (config('database.default') === 'pgsql') {
-            DB::statement('DROP INDEX CONCURRENTLY IF EXISTS idx_users_active_partial');
-            DB::statement('DROP INDEX CONCURRENTLY IF EXISTS idx_contents_published_partial');
-            DB::statement('DROP INDEX CONCURRENTLY IF EXISTS idx_sessions_online_partial');
-            DB::statement('DROP INDEX CONCURRENTLY IF EXISTS idx_login_attempts_recent_partial');
+            DB::statement('DROP INDEX IF EXISTS idx_users_active_partial');
+            DB::statement('DROP INDEX IF EXISTS idx_contents_published_partial');
+            DB::statement('DROP INDEX IF EXISTS idx_sessions_online_partial');
+            DB::statement('DROP INDEX IF EXISTS idx_login_attempts_recent_partial');
         }
     }
 };

@@ -71,7 +71,6 @@ return new class extends Migration
             $table->softDeletes();
             
             // Foreign key constraints
-            $table->foreign('parent_id')->references('id')->on('idbi_contents')->onDelete('cascade');
             $table->foreign('author_id')->references('id')->on('idbi_users')->onDelete('cascade');
             $table->foreign('editor_id')->references('id')->on('idbi_users')->onDelete('set null');
             $table->foreign('created_by')->references('id')->on('idbi_users')->onDelete('set null');
@@ -89,6 +88,11 @@ return new class extends Migration
             $table->index(['created_at']);
             $table->index(['published_at']);
             // $table->fullText(['title', 'content', 'excerpt']); // Full-text search (not supported in SQLite)
+        });
+        
+        // Add self-referencing foreign key after table creation
+        Schema::table('idbi_contents', function (Blueprint $table) {
+            $table->foreign('parent_id')->references('id')->on('idbi_contents')->onDelete('cascade');
         });
     }
 

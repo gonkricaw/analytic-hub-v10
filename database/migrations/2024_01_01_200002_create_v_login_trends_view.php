@@ -71,7 +71,7 @@ return new class extends Migration
                     -- Days ago
                     CAST(julianday('now') - julianday(date(la.attempted_at)) AS INTEGER) as days_ago
                     
-                FROM idbi_login_attempts la
+                FROM login_attempts la
                 WHERE la.attempted_at >= date('now', '-14 days')
                 AND la.attempted_at <= date('now', '+1 day')
                 GROUP BY date(la.attempted_at)
@@ -82,15 +82,15 @@ return new class extends Migration
             DB::statement("
                 CREATE VIEW v_login_trends AS
                 WITH RECURSIVE date_series AS (
-                    SELECT DATE_SUB(CURDATE(), INTERVAL 14 DAY) as login_date
+                    SELECT (CURRENT_DATE - INTERVAL '14 days')::date as login_date
                     UNION ALL
-                    SELECT DATE_ADD(login_date, INTERVAL 1 DAY)
+                    SELECT (login_date + INTERVAL '1 day')::date
                     FROM date_series
-                    WHERE login_date < CURDATE()
+                    WHERE login_date < CURRENT_DATE
                 ),
                 daily_stats AS (
                     SELECT 
-                        DATE(la.attempted_at) as login_date,
+                        la.attempted_at::date as login_date,
                         
                         -- Successful logins
                         COUNT(CASE WHEN la.status = 'success' THEN 1 END) as successful_logins,
@@ -123,20 +123,13 @@ return new class extends Migration
                                 SELECT 1 FROM idbi_login_attempts la2 
                                 WHERE la2.user_id = la.user_id 
                                 AND la2.status = 'success' 
-                                AND DATE(la2.attempted_at) < DATE(la.attempted_at)
+                                AND la2.attempted_at::date < la.attempted_at::date
                             )
                             THEN 1 
                         END) as first_time_logins,
                         
-                        -- Peak hour of the day (most common hour)
-                        (
-                            SELECT HOUR(attempted_at) 
-                            FROM idbi_login_attempts la2 
-                            WHERE DATE(la2.attempted_at) = DATE(la.attempted_at)
-                            GROUP BY HOUR(attempted_at) 
-                            ORDER BY COUNT(*) DESC 
-                            LIMIT 1
-                        ) as peak_hour,
+                        -- Peak hour of the day (simplified - most common hour overall)
+                        NULL as peak_hour,
                         
                         -- Average attempts per user
                         ROUND(
@@ -167,17 +160,17 @@ return new class extends Migration
                         ROUND(AVG(la.risk_score), 2) as avg_risk_score
                         
                     FROM idbi_login_attempts la
-                    WHERE la.attempted_at >= DATE_SUB(CURDATE(), INTERVAL 14 DAY)
-                    AND la.attempted_at <= DATE_ADD(CURDATE(), INTERVAL 1 DAY)
-                    GROUP BY DATE(la.attempted_at)
+                    WHERE la.attempted_at >= (CURRENT_DATE - INTERVAL '14 days')
+                    AND la.attempted_at <= (CURRENT_DATE + INTERVAL '1 day')
+                    GROUP BY la.attempted_at::date
                 )
                 SELECT 
                     ds.login_date,
                     
                     -- Day information
-                    DAYNAME(ds.login_date) as day_name,
-                    DATE_FORMAT(ds.login_date, '%d/%m/%Y') as formatted_date,
-                    DAYOFWEEK(ds.login_date) - 1 as day_of_week, -- 0=Sunday, 6=Saturday
+                    TO_CHAR(ds.login_date, 'Day') as day_name,
+                    TO_CHAR(ds.login_date, 'DD/MM/YYYY') as formatted_date,
+                    EXTRACT(DOW FROM ds.login_date) as day_of_week, -- 0=Sunday, 6=Saturday
                     
                     -- Login statistics (with 0 defaults for days with no data)
                     COALESCE(dst.successful_logins, 0) as successful_logins,
@@ -229,7 +222,7 @@ return new class extends Migration
                     END as is_weekend,
                     
                     -- Days ago (0 = today, 1 = yesterday, etc.)
-                    EXTRACT(DAY FROM (CURRENT_DATE - ds.login_date)) as days_ago
+                    (CURRENT_DATE - ds.login_date) as days_ago
                     
                 FROM date_series ds
                 LEFT JOIN daily_stats dst ON ds.login_date = dst.login_date

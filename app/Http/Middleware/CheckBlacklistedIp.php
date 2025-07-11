@@ -6,6 +6,8 @@ use Closure;
 use Illuminate\Http\Request;
 use App\Models\BlacklistedIp;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Schema;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Class CheckBlacklistedIp
@@ -30,8 +32,13 @@ class CheckBlacklistedIp
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      * @return mixed
      */
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
+        // Check if the blacklisted_ips table exists before querying
+        if (!\Illuminate\Support\Facades\Schema::hasTable('idbi_blacklisted_ips')) {
+            return $next($request);
+        }
+        
         $ipAddress = $request->ip();
         
         // Check if IP is blacklisted

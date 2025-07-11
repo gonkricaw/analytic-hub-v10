@@ -156,23 +156,23 @@ return new class extends Migration
                     -- Current month statistics
                     COUNT(CASE 
                         WHEN la.status = 'success' 
-                        AND la.attempted_at >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
-                        AND la.attempted_at < DATE_ADD(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 1 MONTH)
+                        AND la.attempted_at >= DATE_TRUNC('month', CURRENT_DATE)
+                        AND la.attempted_at < DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month'
                         THEN 1 
                     END) as current_month_logins,
                     
                     -- Previous month statistics
                     COUNT(CASE 
                         WHEN la.status = 'success' 
-                        AND la.attempted_at >= DATE_SUB(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 1 MONTH)
-                        AND la.attempted_at < DATE_FORMAT(CURDATE(), '%Y-%m-01')
+                        AND la.attempted_at >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '1 month'
+                        AND la.attempted_at < DATE_TRUNC('month', CURRENT_DATE)
                         THEN 1 
                     END) as previous_month_logins,
                     
                     -- Last 30 days statistics
                     COUNT(CASE 
                         WHEN la.status = 'success' 
-                        AND la.attempted_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+                        AND la.attempted_at >= CURRENT_DATE - INTERVAL '30 days'
                         THEN 1 
                     END) as last_30_days_logins,
                     
@@ -186,7 +186,7 @@ return new class extends Migration
                     ROUND(
                         COUNT(CASE 
                             WHEN la.status = 'success' 
-                            AND la.attempted_at >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+                            AND la.attempted_at >= CURRENT_DATE - INTERVAL '6 months'
                             THEN 1 
                         END) / 6.0, 2
                     ) as avg_monthly_logins,
@@ -206,7 +206,7 @@ return new class extends Migration
                     -- Days since last login
                     CASE 
                         WHEN MAX(CASE WHEN la.status = 'success' THEN la.attempted_at END) IS NOT NULL
-                        THEN DATEDIFF(NOW(), MAX(CASE WHEN la.status = 'success' THEN la.attempted_at END))
+                        THEN EXTRACT(DAY FROM (CURRENT_TIMESTAMP - MAX(CASE WHEN la.status = 'success' THEN la.attempted_at END)))
                         ELSE NULL
                     END as days_since_last_login,
                     
@@ -214,19 +214,19 @@ return new class extends Migration
                     ROUND(
                         (COUNT(CASE 
                             WHEN la.status = 'success' 
-                            AND la.attempted_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+                            AND la.attempted_at >= CURRENT_DATE - INTERVAL '7 days'
                             THEN 1 
                         END) * 10) +
                         (COUNT(CASE 
                             WHEN la.status = 'success' 
-                            AND la.attempted_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-                            AND la.attempted_at < DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+                            AND la.attempted_at >= CURRENT_DATE - INTERVAL '30 days'
+                            AND la.attempted_at < CURRENT_DATE - INTERVAL '7 days'
                             THEN 1 
                         END) * 5) +
                         (COUNT(CASE 
                             WHEN la.status = 'success' 
-                            AND la.attempted_at >= DATE_SUB(CURDATE(), INTERVAL 90 DAY)
-                            AND la.attempted_at < DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+                            AND la.attempted_at >= CURRENT_DATE - INTERVAL '90 days'
+                            AND la.attempted_at < CURRENT_DATE - INTERVAL '30 days'
                             THEN 1 
                         END) * 2), 2
                     ) as activity_score,
@@ -234,20 +234,20 @@ return new class extends Migration
                     -- Unique login days in current month
                     COUNT(DISTINCT CASE 
                         WHEN la.status = 'success' 
-                        AND la.attempted_at >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
-                        AND la.attempted_at < DATE_ADD(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 1 MONTH)
-                        THEN DATE(la.attempted_at)
+                        AND la.attempted_at >= DATE_TRUNC('month', CURRENT_DATE)
+                        AND la.attempted_at < DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month'
+                        THEN la.attempted_at::date
                     END) as unique_login_days_current_month,
                     
                     -- Login consistency (percentage of days logged in this month)
                     ROUND(
                         (COUNT(DISTINCT CASE 
                             WHEN la.status = 'success' 
-                            AND la.attempted_at >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
-                            AND la.attempted_at < DATE_ADD(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 1 MONTH)
-                            THEN DATE(la.attempted_at)
+                            AND la.attempted_at >= DATE_TRUNC('month', CURRENT_DATE)
+                            AND la.attempted_at < DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month'
+                            THEN la.attempted_at::date
                         END) * 100.0) / 
-                        DAY(CURDATE()), 2
+                        EXTRACT(DAY FROM CURRENT_DATE), 2
                     ) as login_consistency_percentage
                     
                 FROM idbi_users u

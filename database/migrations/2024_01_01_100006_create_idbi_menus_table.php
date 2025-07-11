@@ -56,8 +56,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
             
-            // Foreign key constraints
-            $table->foreign('parent_id')->references('id')->on('idbi_menus')->onDelete('cascade');
+            // Foreign key constraints (except self-referencing)
             $table->foreign('required_permission_id')->references('id')->on('idbi_permissions')->onDelete('set null');
             $table->foreign('created_by')->references('id')->on('idbi_users')->onDelete('set null');
             $table->foreign('updated_by')->references('id')->on('idbi_users')->onDelete('set null');
@@ -71,6 +70,11 @@ return new class extends Migration
             $table->index(['is_system_menu']);
             $table->index(['created_by']);
             $table->index(['updated_by']);
+        });
+        
+        // Add self-referencing foreign key constraint after table creation
+        Schema::table('idbi_menus', function (Blueprint $table) {
+            $table->foreign('parent_id')->references('id')->on('idbi_menus')->onDelete('cascade');
         });
     }
 

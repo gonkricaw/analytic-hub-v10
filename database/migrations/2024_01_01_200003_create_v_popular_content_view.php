@@ -253,28 +253,28 @@ return new class extends Migration
                     -- Activity-based view tracking (last 30 days)
                     COUNT(CASE 
                         WHEN ua.activity_type = 'content_view' 
-                        AND ua.created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+                        AND ua.created_at >= (CURRENT_DATE - INTERVAL '30 days')
                         THEN 1 
                     END) as views_last_30_days,
                     
                     -- Activity-based view tracking (last 7 days)
                     COUNT(CASE 
                         WHEN ua.activity_type = 'content_view' 
-                        AND ua.created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+                        AND ua.created_at >= (CURRENT_DATE - INTERVAL '7 days')
                         THEN 1 
                     END) as views_last_7_days,
                     
                     -- Activity-based view tracking (today)
                     COUNT(CASE 
                         WHEN ua.activity_type = 'content_view' 
-                        AND DATE(ua.created_at) = CURDATE()
+                        AND ua.created_at::date = CURRENT_DATE
                         THEN 1 
                     END) as views_today,
                     
                     -- Unique viewers (last 30 days)
                     COUNT(DISTINCT CASE 
                         WHEN ua.activity_type = 'content_view' 
-                        AND ua.created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+                        AND ua.created_at >= (CURRENT_DATE - INTERVAL '30 days')
                         AND ua.user_id IS NOT NULL
                         THEN ua.user_id 
                     END) as unique_viewers_30_days,
@@ -282,7 +282,7 @@ return new class extends Migration
                     -- Unique viewers (last 7 days)
                     COUNT(DISTINCT CASE 
                         WHEN ua.activity_type = 'content_view' 
-                        AND ua.created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+                        AND ua.created_at >= (CURRENT_DATE - INTERVAL '7 days')
                         AND ua.user_id IS NOT NULL
                         THEN ua.user_id 
                     END) as unique_viewers_7_days,
@@ -291,7 +291,7 @@ return new class extends Migration
                     ROUND(
                         COUNT(CASE 
                             WHEN ua.activity_type = 'content_view' 
-                            AND ua.created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+                            AND ua.created_at >= (CURRENT_DATE - INTERVAL '30 days')
                             THEN 1 
                         END) / 30.0, 2
                     ) as avg_daily_views_30_days,
@@ -311,7 +311,7 @@ return new class extends Migration
                     -- Days since last view
                     CASE 
                         WHEN MAX(CASE WHEN ua.activity_type = 'content_view' THEN ua.created_at END) IS NOT NULL
-                        THEN EXTRACT(DAY FROM (CURRENT_TIMESTAMP - MAX(CASE WHEN ua.activity_type = 'content_view' THEN ua.created_at END)))
+                        THEN (CURRENT_TIMESTAMP - MAX(CASE WHEN ua.activity_type = 'content_view' THEN ua.created_at END))::interval
                         ELSE NULL
                     END as days_since_last_view,
                     
@@ -345,14 +345,14 @@ return new class extends Migration
                     ) as engagement_score,
                     
                     -- Content age in days
-                    EXTRACT(DAY FROM (CURRENT_TIMESTAMP - c.published_at)) as content_age_days,
+                    (CURRENT_TIMESTAMP - c.published_at)::interval as content_age_days,
                     
                     -- Views per day since publication
                     CASE 
                         WHEN c.published_at IS NOT NULL AND c.published_at <= CURRENT_TIMESTAMP
                         THEN ROUND(
-                            c.view_count / GREATEST(
-                                EXTRACT(DAY FROM (CURRENT_TIMESTAMP - c.published_at)), 1
+                            c.view_count::numeric / GREATEST(
+                                EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - c.published_at)) / 86400, 1
                             ), 2
                         )
                         ELSE 0

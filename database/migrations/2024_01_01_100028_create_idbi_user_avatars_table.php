@@ -155,9 +155,8 @@ return new class extends Migration
             $table->uuid('updated_by')->nullable();
             $table->timestamps();
             
-            // Foreign key constraints
+            // Foreign key constraints (except self-referencing)
             $table->foreign('user_id')->references('id')->on('idbi_users')->onDelete('cascade');
-            $table->foreign('previous_version_id')->references('id')->on('idbi_user_avatars')->onDelete('set null');
             $table->foreign('reviewed_by')->references('id')->on('idbi_users')->onDelete('set null');
             $table->foreign('uploaded_by')->references('id')->on('idbi_users')->onDelete('set null');
             $table->foreign('created_by')->references('id')->on('idbi_users')->onDelete('set null');
@@ -181,6 +180,11 @@ return new class extends Migration
             $table->index(['is_archived']);
             $table->index(['created_by']);
             $table->index(['updated_by']);
+        });
+        
+        // Add self-referencing foreign key after table creation
+        Schema::table('idbi_user_avatars', function (Blueprint $table) {
+            $table->foreign('previous_version_id')->references('id')->on('idbi_user_avatars')->onDelete('set null');
         });
     }
 

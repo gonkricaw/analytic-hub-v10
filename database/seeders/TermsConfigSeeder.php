@@ -47,7 +47,7 @@ class TermsConfigSeeder extends Seeder
                 'help_text' => 'Version number for Terms & Conditions (e.g., 1.0, 1.1, 2.0)',
                 'is_active' => true,
                 'is_encrypted' => false,
-                'environment' => 'all'
+                'deployment_stage' => 'all'
             ],
             [
                 'key' => 'terms.last_updated',
@@ -55,7 +55,7 @@ class TermsConfigSeeder extends Seeder
                 'description' => 'Timestamp when Terms & Conditions were last updated',
                 'value' => now()->toDateTimeString(),
                 'default_value' => now()->toDateTimeString(),
-                'data_type' => 'datetime',
+                'data_type' => 'string',
                 'group' => 'terms',
                 'category' => 'version_management',
                 'sort_order' => 2,
@@ -67,7 +67,7 @@ class TermsConfigSeeder extends Seeder
                 'help_text' => 'Automatically updated when T&C version changes',
                 'is_active' => true,
                 'is_encrypted' => false,
-                'environment' => 'all'
+                'deployment_stage' => 'all'
             ],
             [
                 'key' => 'terms.notification_enabled',
@@ -91,7 +91,7 @@ class TermsConfigSeeder extends Seeder
                 'help_text' => 'Send notifications to users when T&C are updated',
                 'is_active' => true,
                 'is_encrypted' => false,
-                'environment' => 'all'
+                'deployment_stage' => 'all'
             ],
             [
                 'key' => 'terms.force_reacceptance',
@@ -115,7 +115,7 @@ class TermsConfigSeeder extends Seeder
                 'help_text' => 'Require users to re-accept T&C when version changes',
                 'is_active' => true,
                 'is_encrypted' => false,
-                'environment' => 'all'
+                'deployment_stage' => 'all'
             ],
             [
                 'key' => 'terms.notification_title',
@@ -140,7 +140,7 @@ class TermsConfigSeeder extends Seeder
                 'help_text' => 'Title displayed in T&C update notifications',
                 'is_active' => true,
                 'is_encrypted' => false,
-                'environment' => 'all'
+                'deployment_stage' => 'all'
             ],
             [
                 'key' => 'terms.notification_message',
@@ -165,7 +165,7 @@ class TermsConfigSeeder extends Seeder
                 'help_text' => 'Message content for T&C update notifications',
                 'is_active' => true,
                 'is_encrypted' => false,
-                'environment' => 'all'
+                'deployment_stage' => 'all'
             ]
         ];
 

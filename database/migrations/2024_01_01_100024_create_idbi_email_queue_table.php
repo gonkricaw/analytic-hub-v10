@@ -137,7 +137,7 @@ return new class extends Migration
             
             // Foreign key constraints
             $table->foreign('template_id')->references('id')->on('idbi_email_templates')->onDelete('set null');
-            $table->foreign('user_id')->references('id')->on('idbi_users')->onDelete('set null');
+            $table->foreign('user_id')->references('id')->on('idbi_users')->onDelete('cascade');
             $table->foreign('sender_user_id')->references('id')->on('idbi_users')->onDelete('set null');
             $table->foreign('created_by')->references('id')->on('idbi_users')->onDelete('set null');
             $table->foreign('updated_by')->references('id')->on('idbi_users')->onDelete('set null');

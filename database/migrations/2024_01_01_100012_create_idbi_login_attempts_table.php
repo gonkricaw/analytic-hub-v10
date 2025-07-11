@@ -76,7 +76,7 @@ return new class extends Migration
             $table->timestamps();
             
             // Foreign key constraints
-            $table->foreign('user_id')->references('id')->on('idbi_users')->onDelete('set null');
+            $table->foreign('user_id')->references('id')->on('idbi_users')->onDelete('cascade');
             $table->foreign('created_by')->references('id')->on('idbi_users')->onDelete('set null');
             
             // Indexes for performance and security analysis

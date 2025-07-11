@@ -143,6 +143,11 @@ class EnhancedCsrfProtection extends Middleware
      */
     private function blacklistIpForCsrfAbuse(Request $request, int $failureCount): void
     {
+        // Check if the blacklisted_ips table exists before querying
+        if (!\Illuminate\Support\Facades\Schema::hasTable('idbi_blacklisted_ips')) {
+            return;
+        }
+        
         $ipAddress = $request->ip();
         
         // Check if IP is already blacklisted
