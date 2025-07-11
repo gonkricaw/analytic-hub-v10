@@ -241,6 +241,18 @@ class Menu extends Model
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class, 'idbi_menu_roles', 'menu_id', 'role_id')
+                    ->withPivot([
+                        'id', 'is_granted', 'access_type', 'access_conditions', 'restrictions',
+                        'is_visible', 'show_in_navigation', 'show_children', 'custom_order',
+                        'assignment_reason', 'assignment_data', 'notes', 'granted_at',
+                        'expires_at', 'is_temporary', 'duration_hours', 'granted_by',
+                        'revoked_by', 'revoked_at', 'revocation_reason', 'overrides_parent',
+                        'overridden_menu_id', 'override_justification', 'access_count',
+                        'last_accessed_at', 'first_accessed_at', 'access_statistics',
+                        'is_active', 'requires_approval', 'approval_status', 'approved_by',
+                        'approved_at', 'is_sensitive', 'requires_justification',
+                        'compliance_notes', 'risk_level', 'created_by', 'updated_by'
+                    ])
                     ->withTimestamps();
     }
 
@@ -274,6 +286,13 @@ class Menu extends Model
         }
 
         try {
+            // Check if route requires parameters (like admin.menus.edit)
+            if ($this->route_name === 'admin.menus.edit') {
+                // For edit routes, we need a menu ID parameter
+                // Return a placeholder or the stored URL instead
+                return $this->attributes['url'] ?? '#';
+            }
+            
             return route($this->route_name);
         } catch (\Exception $e) {
             return $this->attributes['url'] ?? '#';
@@ -316,6 +335,31 @@ class Menu extends Model
                 return false;
             }
         }
+
+        // Check role-based access through menu_roles pivot table
+        $userRoleIds = $user->roles()->pluck('idbi_roles.id')->toArray();
+        
+        // Check if menu has any role assignments
+        $menuHasRoleAssignments = $this->roles()->exists();
+        
+        if ($menuHasRoleAssignments) {
+            // Menu has role restrictions, check if user has access
+            if (empty($userRoleIds)) {
+                // User has no roles but menu requires roles
+                return false;
+            }
+            
+            $hasRoleAccess = $this->roles()
+                ->whereIn('idbi_roles.id', $userRoleIds)
+                ->where('idbi_menu_roles.is_granted', true)
+                ->where('idbi_menu_roles.is_active', true)
+                ->exists();
+            
+            if (!$hasRoleAccess) {
+                return false;
+            }
+        }
+        // If menu has no role assignments, allow access (public menu)
 
         // Check additional visibility conditions
         if ($this->visibility_conditions) {
@@ -438,5 +482,336 @@ class Menu extends Model
                   $subQuery->where('users.id', $user->id);
               });
         });
+    }
+
+    /**
+     * Scope for menus visible to specific role.
+     * 
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string|int $roleId
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeVisibleToRole($query, $roleId)
+    {
+        return $query->whereHas('roles', function ($q) use ($roleId) {
+            $q->where('idbi_roles.id', $roleId)
+              ->where('idbi_menu_roles.is_visible', true)
+              ->where('idbi_menu_roles.is_granted', true);
+        });
+    }
+
+    /**
+     * Scope for navigation menus for specific role.
+     * 
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string|int $roleId
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeNavigationForRole($query, $roleId)
+    {
+        return $query->whereHas('roles', function ($q) use ($roleId) {
+            $q->where('idbi_roles.id', $roleId)
+              ->where('idbi_menu_roles.show_in_navigation', true)
+              ->where('idbi_menu_roles.is_granted', true);
+        });
+    }
+
+    /**
+     * Check if menu is visible to user based on role assignments.
+     * 
+     * @param User $user
+     * @return bool
+     */
+    public function isVisibleToUser(User $user): bool
+    {
+        // Check if menu is active
+        if (!$this->is_active) {
+            return false;
+        }
+
+        // Get user's role IDs
+        $userRoleIds = $user->roles()->pluck('idbi_roles.id')->toArray();
+        
+        if (empty($userRoleIds)) {
+            return false;
+        }
+
+        // Check if any of user's roles have visibility access
+        return $this->roles()
+            ->whereIn('idbi_roles.id', $userRoleIds)
+            ->where('idbi_menu_roles.is_visible', true)
+            ->where('idbi_menu_roles.is_granted', true)
+            ->exists();
+    }
+
+    /**
+     * Check if menu should show in navigation for user.
+     * 
+     * @param User $user
+     * @return bool
+     */
+    public function showInNavigationForUser(User $user): bool
+    {
+        if (!$this->isVisibleToUser($user)) {
+            return false;
+        }
+
+        $userRoleIds = $user->roles()->pluck('idbi_roles.id')->toArray();
+        
+        return $this->roles()
+            ->whereIn('idbi_roles.id', $userRoleIds)
+            ->where('idbi_menu_roles.show_in_navigation', true)
+            ->where('idbi_menu_roles.is_granted', true)
+            ->exists();
+    }
+
+    /**
+     * Get menu tree with role-based filtering and caching.
+     * 
+     * @param User $user
+     * @param bool $useCache
+     * @return \Illuminate\Support\Collection
+     */
+    public static function getMenuTreeForUser(User $user, bool $useCache = true): \Illuminate\Support\Collection
+    {
+        $userRoleIds = $user->roles()->pluck('idbi_roles.id')->toArray();
+        $cacheKey = 'menu_tree_user_' . $user->id . '_roles_' . md5(implode(',', $userRoleIds));
+
+        if ($useCache && \Cache::has($cacheKey)) {
+            return \Cache::get($cacheKey);
+        }
+
+        $menus = static::with(['roles', 'children.roles', 'parent'])
+            ->active()
+            ->where(function ($query) use ($userRoleIds) {
+                $query->whereHas('roles', function ($q) use ($userRoleIds) {
+                    $q->whereIn('idbi_roles.id', $userRoleIds)
+                      ->where('idbi_menu_roles.is_visible', true)
+                      ->where('idbi_menu_roles.is_granted', true);
+                })->orWhereDoesntHave('roles'); // Include menus with no role restrictions
+            })
+            ->ordered()
+            ->get();
+
+        $tree = static::buildHierarchicalTree($menus, $user);
+
+        if ($useCache) {
+            \Cache::put($cacheKey, $tree, now()->addHours(2));
+        }
+
+        return $tree;
+    }
+
+    /**
+     * Get navigation menu for user with caching.
+     * 
+     * @param User $user
+     * @param bool $useCache
+     * @return \Illuminate\Support\Collection
+     */
+    public static function getNavigationForUser(User $user, bool $useCache = true): \Illuminate\Support\Collection
+    {
+        $userRoleIds = $user->roles()->pluck('idbi_roles.id')->toArray();
+        $cacheKey = 'navigation_menu_user_' . $user->id . '_roles_' . md5(implode(',', $userRoleIds));
+
+        if ($useCache && \Cache::has($cacheKey)) {
+            return \Cache::get($cacheKey);
+        }
+
+        $menus = static::with(['roles', 'children.roles', 'parent'])
+            ->active()
+            ->where(function ($query) use ($userRoleIds) {
+                $query->whereHas('roles', function ($q) use ($userRoleIds) {
+                    $q->whereIn('idbi_roles.id', $userRoleIds)
+                      ->where('idbi_menu_roles.show_in_navigation', true)
+                      ->where('idbi_menu_roles.is_granted', true);
+                })->orWhereDoesntHave('roles'); // Include menus with no role restrictions
+            })
+            ->ordered()
+            ->get();
+
+        $navigation = static::buildHierarchicalTree($menus, $user, true);
+
+        if ($useCache) {
+            \Cache::put($cacheKey, $navigation, now()->addHours(2));
+        }
+
+        return $navigation;
+    }
+
+    /**
+     * Build hierarchical tree structure.
+     * 
+     * @param \Illuminate\Support\Collection $menus
+     * @param User $user
+     * @param bool $navigationOnly
+     * @return \Illuminate\Support\Collection
+     */
+    private static function buildHierarchicalTree(\Illuminate\Support\Collection $menus, User $user, bool $navigationOnly = false): \Illuminate\Support\Collection
+    {
+        $tree = collect();
+        $menuMap = $menus->keyBy('id');
+
+        foreach ($menus as $menu) {
+            if ($menu->parent_id === null) {
+                $menuItem = static::buildMenuBranch($menu, $menuMap, $user, $navigationOnly);
+                if ($menuItem) {
+                    $tree->push($menuItem);
+                }
+            }
+        }
+
+        return $tree;
+    }
+
+    /**
+     * Build menu branch recursively.
+     * 
+     * @param Menu $menu
+     * @param \Illuminate\Support\Collection $menuMap
+     * @param User $user
+     * @param bool $navigationOnly
+     * @return Menu|null
+     */
+    private static function buildMenuBranch(Menu $menu, \Illuminate\Support\Collection $menuMap, User $user, bool $navigationOnly = false): ?Menu
+    {
+        // Check visibility
+        if ($navigationOnly && !$menu->showInNavigationForUser($user)) {
+            return null;
+        } elseif (!$navigationOnly && !$menu->isVisibleToUser($user)) {
+            return null;
+        }
+
+        // Get children
+        $children = $menuMap->filter(function ($item) use ($menu) {
+            return $item->parent_id === $menu->id;
+        })->sortBy('sort_order');
+
+        $validChildren = collect();
+        foreach ($children as $child) {
+            $childBranch = static::buildMenuBranch($child, $menuMap, $user, $navigationOnly);
+            if ($childBranch) {
+                $validChildren->push($childBranch);
+            }
+        }
+
+        $menu->setRelation('children', $validChildren);
+        return $menu;
+    }
+
+    /**
+     * Detect active menu state based on current URL.
+     * 
+     * @param string $currentUrl
+     * @return bool
+     */
+    public function isActiveForUrl(string $currentUrl): bool
+    {
+        if (!$this->url) {
+            return false;
+        }
+
+        // Exact match
+        if ($this->url === $currentUrl) {
+            return true;
+        }
+
+        // Check if current URL starts with menu URL (for parent menus)
+        if (str_starts_with($currentUrl, rtrim($this->url, '/') . '/')) {
+            return true;
+        }
+
+        // Check children for active state
+        foreach ($this->children as $child) {
+            if ($child->isActiveForUrl($currentUrl)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Generate breadcrumb trail for current menu.
+     * 
+     * @param bool $includeHome
+     * @return array
+     */
+    public function getBreadcrumbTrail(bool $includeHome = true): array
+    {
+        $breadcrumb = [];
+        $current = $this;
+
+        // Build breadcrumb from current to root
+        while ($current) {
+            array_unshift($breadcrumb, [
+                'title' => $current->title,
+                'url' => $current->url,
+                'icon' => $current->icon,
+                'is_active' => false
+            ]);
+            $current = $current->parent;
+        }
+
+        // Add home if requested
+        if ($includeHome && !empty($breadcrumb)) {
+            array_unshift($breadcrumb, [
+                'title' => 'Home',
+                'url' => '/',
+                'icon' => 'fas fa-home',
+                'is_active' => false
+            ]);
+        }
+
+        // Mark last item as active
+        if (!empty($breadcrumb)) {
+            $breadcrumb[count($breadcrumb) - 1]['is_active'] = true;
+        }
+
+        return $breadcrumb;
+    }
+
+    /**
+     * Clear menu cache for user.
+     * 
+     * @param User $user
+     * @return void
+     */
+    public static function clearCacheForUser(User $user): void
+    {
+        $userRoleIds = $user->roles()->pluck('idbi_roles.id')->toArray();
+        $cacheKeys = [
+            'menu_tree_user_' . $user->id . '_roles_' . md5(implode(',', $userRoleIds)),
+            'navigation_menu_user_' . $user->id . '_roles_' . md5(implode(',', $userRoleIds))
+        ];
+
+        foreach ($cacheKeys as $key) {
+            \Cache::forget($key);
+        }
+    }
+
+    /**
+     * Clear all menu cache.
+     * 
+     * @return void
+     */
+    public static function clearAllCache(): void
+    {
+        $cacheKeys = [
+            'menu_tree',
+            'navigation_menu'
+        ];
+
+        foreach ($cacheKeys as $key) {
+            \Cache::forget($key);
+        }
+
+        // Clear role-specific caches
+        $roles = \App\Models\Role::pluck('id');
+        foreach ($roles as $roleId) {
+            \Cache::forget("role_menu_{$roleId}");
+            \Cache::forget("menu_tree_role_{$roleId}");
+            \Cache::forget("navigation_menu_role_{$roleId}");
+        }
     }
 }

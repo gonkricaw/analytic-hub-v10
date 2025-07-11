@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\View;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\Permission;
@@ -13,6 +14,7 @@ use App\Observers\RoleObserver;
 use App\Observers\PermissionObserver;
 use App\Observers\ContentObserver;
 use App\Observers\SystemConfigObserver;
+use App\View\Composers\MenuComposer;
 
 /**
  * Class AppServiceProvider
@@ -37,6 +39,7 @@ class AppServiceProvider extends ServiceProvider
      * 
      * Registers model observers for activity logging and audit trail.
      * These observers track model events and log them to ActivityLog model.
+     * Also registers view composers for menu data injection.
      */
     public function boot(): void
     {
@@ -46,5 +49,12 @@ class AppServiceProvider extends ServiceProvider
         Permission::observe(PermissionObserver::class);
         Content::observe(ContentObserver::class);
         SystemConfig::observe(SystemConfigObserver::class);
+        
+        // Register view composers
+        View::composer([
+            'layouts.admin',
+            'admin.*',
+            'layouts.app'
+        ], MenuComposer::class);
     }
 }

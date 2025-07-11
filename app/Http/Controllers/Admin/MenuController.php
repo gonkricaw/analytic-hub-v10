@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Yajra\DataTables\Facades\DataTables;
 use Exception;
@@ -255,10 +256,12 @@ class MenuController extends Controller
      * @param Menu $menu
      * @return View
      */
-    public function show(Menu $menu): View
+    public function show($menuId): View|\Illuminate\Http\RedirectResponse
     {
         try {
-            $menu->load(['parent', 'children', 'roles', 'permission']);
+            // Manually resolve model to ensure proper UUID handling
+            $menu = Menu::findOrFail($menuId);
+            $menu->load(['parent', 'children', 'roles', 'requiredPermission']);
             return view('admin.menus.show', compact('menu'));
         } catch (Exception $e) {
             Log::error('Error showing menu: ' . $e->getMessage());
@@ -273,9 +276,12 @@ class MenuController extends Controller
      * @param Menu $menu
      * @return View
      */
-    public function edit(Menu $menu): View
+    public function edit($menuId): View
     {
         try {
+            // Manually resolve model to ensure proper UUID handling
+            $menu = Menu::findOrFail($menuId);
+            
             // Get potential parent menus (excluding self and descendants)
             $parentMenus = Menu::where('level', '<', 2)
                 ->where('is_active', true)
@@ -313,9 +319,12 @@ class MenuController extends Controller
      * @param Menu $menu
      * @return RedirectResponse
      */
-    public function update(Request $request, Menu $menu): RedirectResponse
+    public function update(Request $request, $menuId): RedirectResponse
     {
         try {
+            // Manually resolve model to ensure proper UUID handling
+            $menu = Menu::findOrFail($menuId);
+            
             // Validate the request
             $validator = $this->validateMenuRequest($request, $menu->id);
             
@@ -409,9 +418,12 @@ class MenuController extends Controller
      * @param Menu $menu
      * @return JsonResponse
      */
-    public function destroy(Menu $menu): JsonResponse
+    public function destroy($menuId): JsonResponse
     {
         try {
+            // Manually resolve model to ensure proper UUID handling
+            $menu = Menu::findOrFail($menuId);
+            
             // Prevent deletion of system menus
             if ($menu->is_system_menu) {
                 return response()->json([
@@ -466,9 +478,12 @@ class MenuController extends Controller
      * @param Menu $menu
      * @return JsonResponse
      */
-    public function duplicate(Request $request, Menu $menu): JsonResponse
+    public function duplicate(Request $request, $menuId): JsonResponse
     {
         try {
+            // Manually resolve model to ensure proper UUID handling
+            $menu = Menu::findOrFail($menuId);
+            
             DB::beginTransaction();
 
             // Get next sort order
@@ -586,9 +601,12 @@ class MenuController extends Controller
      * @param Menu $menu
      * @return JsonResponse
      */
-    public function toggleStatus(Menu $menu): JsonResponse
+    public function toggleStatus($menuId): JsonResponse
     {
         try {
+            // Manually resolve model to ensure proper UUID handling
+            $menu = Menu::findOrFail($menuId);
+            
             $menu->update([
                 'is_active' => !$menu->is_active,
                 'updated_by' => Auth::id()
@@ -623,9 +641,12 @@ class MenuController extends Controller
      * @param Menu $menu
      * @return JsonResponse
      */
-    public function preview(Menu $menu): JsonResponse
+    public function preview($menuId): JsonResponse
     {
         try {
+            // Manually resolve model to ensure proper UUID handling
+            $menu = Menu::findOrFail($menuId);
+            
             $menu->load(['parent', 'children', 'roles']);
 
             $previewData = [
@@ -802,5 +823,366 @@ class MenuController extends Controller
         }
 
         return $breadcrumb;
+    }
+
+    /**
+     * Show role assignment interface for a menu.
+     * 
+     * @param Menu $menu
+     * @return View
+     */
+    public function showRoleAssignment($menuId = null): View
+    {
+        // Check if menuId is provided and resolve the model
+        if (!$menuId) {
+            return view('admin.menus.role-assignment-error');
+        }
+        
+        try {
+            // Manually resolve model to ensure proper UUID handling
+            $menu = Menu::findOrFail($menuId);
+        } catch (\Exception $e) {
+            return view('admin.menus.role-assignment-error');
+        }
+        
+        $menu->load(['roles', 'parent', 'children']);
+        $roles = Role::where('is_active', true)->orderBy('name')->get();
+        $assignedRoleIds = $menu->roles->pluck('id')->toArray();
+        
+        return view('admin.menus.role-assignment', compact('menu', 'roles', 'assignedRoleIds'));
+    }
+
+    /**
+     * Show bulk role assignment interface
+     *
+     * @return \Illuminate\View\View
+     */
+    public function showBulkRoleAssignment(): \Illuminate\View\View|\Illuminate\Http\RedirectResponse
+    {
+        try {
+            $menus = Menu::with('roles')->orderBy('sort_order')->get();
+            $roles = Role::all();
+            
+            return view('admin.menus.bulk-role-assignment', compact('menus', 'roles'));
+        } catch (\Exception $e) {
+            Log::error('Error in showBulkRoleAssignment: ' . $e->getMessage());
+            return redirect()->route('admin.menus.index')
+                ->with('error', 'Failed to load bulk role assignment interface.');
+        }
+    }
+
+    /**
+     * Assign roles to a menu.
+     * 
+     * @param Request $request
+     * @param string $menuId
+     * @return RedirectResponse
+     */
+    public function assignRoles(Request $request, $menuId): RedirectResponse
+    {
+        try {
+            // Manually resolve model to ensure proper UUID handling
+            $menu = Menu::findOrFail($menuId);
+            
+            Log::info('assignRoles called', [
+                'menu_id' => $menuId,
+                'roles' => $request->roles
+            ]);
+            $request->validate([
+                'roles' => 'required|array',
+                'roles.*' => 'exists:idbi_roles,id',
+                'access_type' => 'nullable|string|in:view,manage,full',
+                'is_visible' => 'boolean',
+                'show_in_navigation' => 'boolean',
+                'show_children' => 'boolean'
+            ]);
+
+            DB::beginTransaction();
+
+            // Prepare pivot data
+            $pivotData = [];
+            foreach ($request->roles as $roleId) {
+                $pivotData[$roleId] = [
+                    'id' => (string) Str::uuid(),
+                    'is_granted' => true,
+                    'access_type' => $request->access_type ?? 'view',
+                    'is_visible' => $request->is_visible ?? true,
+                    'show_in_navigation' => $request->show_in_navigation ?? true,
+                    'show_children' => $request->show_children ?? true,
+                    'granted_by' => Auth::id(),
+                    'granted_at' => now(),
+                    'created_by' => Auth::id(),
+                    'created_at' => now(),
+                    'updated_by' => Auth::id(),
+                    'updated_at' => now()
+                ];
+            }
+
+            // Detach existing roles and attach new ones
+            $menu->roles()->detach();
+            
+            // Attach new roles with pivot data
+            foreach ($pivotData as $roleId => $data) {
+                $menu->roles()->attach($roleId, $data);
+            }
+
+            // Clear menu cache for affected roles
+            $this->clearMenuCacheForRoles($request->roles);
+
+            DB::commit();
+
+            Log::info('Menu roles assigned successfully', [
+                'menu_id' => $menu->id,
+                'roles' => $request->roles,
+                'assigned_by' => Auth::id()
+            ]);
+
+            return redirect()->back()->with('success', 'Roles assigned successfully');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to assign menu roles', [
+                'menu_id' => $menuId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all()
+            ]);
+
+            return redirect()->back()->with('error', 'Failed to assign roles: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Remove a role from a menu.
+     * 
+     * @param Menu $menu
+     * @param Role $role
+     * @return JsonResponse
+     */
+    public function removeRole($menuId, $roleId): JsonResponse
+    {
+        try {
+            // Manually resolve models to ensure proper UUID handling
+            $menu = Menu::findOrFail($menuId);
+            $role = Role::findOrFail($roleId);
+            
+            Log::info('removeRole method called', ['menu_id' => $menu->id, 'role_id' => $role->id]);
+            
+            DB::beginTransaction();
+
+            // Delete from pivot table directly since detach() doesn't work with complex pivot tables
+            Log::info('About to delete from pivot table', [
+                'menu_id' => $menu->id,
+                'role_id' => $role->id,
+                'menu_type' => get_class($menu),
+                'role_type' => get_class($role)
+            ]);
+            
+            $deletedRows = DB::table('idbi_menu_roles')
+                ->where('menu_id', $menu->id)
+                ->where('role_id', $role->id)
+                ->delete();
+            
+            Log::info('Attempting to remove role from menu', [
+                'menu_id' => $menu->id,
+                'role_id' => $role->id,
+                'deleted_rows' => $deletedRows
+            ]);
+
+            // Clear menu cache for this role
+            $this->clearMenuCacheForRoles([$role->id]);
+
+            DB::commit();
+
+            Log::info('Menu role removed successfully', [
+                'menu_id' => $menu->id,
+                'role_id' => $role->id,
+                'removed_by' => Auth::id()
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Role removed successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to remove menu role', [
+                'menu_id' => $menu->id,
+                'role_id' => $role->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to remove role: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Bulk role assignment for multiple menus.
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function bulkRoleAssignment(Request $request): JsonResponse
+    {
+        try {
+            $request->validate([
+                'menu_ids' => 'required_without:menus|array',
+                'menu_ids.*' => 'exists:idbi_menus,id',
+                'menus' => 'required_without:menu_ids|array',
+                'menus.*' => 'exists:idbi_menus,id',
+                'roles' => 'required|array',
+                'roles.*' => 'exists:idbi_roles,id',
+                'action' => 'required|string|in:assign,remove',
+                'access_type' => 'nullable|string|in:view,manage,full',
+                'is_visible' => 'boolean',
+                'show_in_navigation' => 'boolean',
+                'show_children' => 'boolean'
+            ]);
+
+            DB::beginTransaction();
+
+            // Support both 'menus' and 'menu_ids' parameter names
+            $menuIds = $request->menu_ids ?? $request->menus;
+            $menus = Menu::whereIn('id', $menuIds)->get();
+            $affectedRoles = $request->roles ?? [];
+
+            foreach ($menus as $menu) {
+                if ($request->action === 'assign') {
+                    // Prepare pivot data for assignment
+                    $pivotData = [];
+                    foreach ($request->roles as $roleId) {
+                        $pivotData[$roleId] = [
+                            'id' => \Illuminate\Support\Str::uuid(),
+                            'is_granted' => true,
+                            'access_type' => $request->access_type ?? 'view',
+                            'is_visible' => $request->is_visible ?? true,
+                            'show_in_navigation' => $request->show_in_navigation ?? true,
+                            'show_children' => $request->show_children ?? true,
+                            'granted_at' => now(),
+                            'granted_by' => Auth::id(),
+                            'is_active' => true,
+                            'created_by' => Auth::id(),
+                            'created_at' => now(),
+                            'updated_at' => now()
+                        ];
+                    }
+                    
+                    // Sync roles (this will add new roles and keep existing ones)
+                    $existingRoles = $menu->roles()->pluck('idbi_roles.id')->toArray();
+                    $allRoles = array_unique(array_merge($existingRoles, $request->roles));
+                    
+                    $finalPivotData = [];
+                    foreach ($allRoles as $roleId) {
+                        if (in_array($roleId, $request->roles)) {
+                            $finalPivotData[$roleId] = $pivotData[$roleId];
+                        } else {
+                            // Keep existing role data
+                            $existingPivot = $menu->roles()->where('idbi_roles.id', $roleId)->first();
+                            if ($existingPivot) {
+                                $finalPivotData[$roleId] = [
+                                    'id' => $existingPivot->pivot->id,
+                                    'is_granted' => $existingPivot->pivot->is_granted,
+                                    'access_type' => $existingPivot->pivot->access_type,
+                                    'is_visible' => $existingPivot->pivot->is_visible,
+                                    'show_in_navigation' => $existingPivot->pivot->show_in_navigation,
+                                    'show_children' => $existingPivot->pivot->show_children,
+                                    'granted_by' => $existingPivot->pivot->granted_by,
+                                    'granted_at' => $existingPivot->pivot->granted_at,
+                                    'is_active' => $existingPivot->pivot->is_active,
+                                    'created_by' => $existingPivot->pivot->created_by,
+                                    'created_at' => $existingPivot->pivot->created_at,
+                                    'updated_at' => now()
+                                ];
+                            }
+                        }
+                    }
+                    
+                    $menu->roles()->sync($finalPivotData);
+                } else {
+                    // Remove roles
+                    $menu->roles()->detach($request->roles);
+                }
+            }
+
+            // Clear menu cache for affected roles
+            $this->clearMenuCacheForRoles($affectedRoles);
+
+            DB::commit();
+
+            Log::info('Bulk menu role assignment completed', [
+                'menu_ids' => $menuIds,
+                'roles' => $request->roles,
+                'action' => $request->action,
+                'performed_by' => Auth::id()
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Bulk role assignment completed successfully',
+                'affected_menus' => count($menuIds),
+                'affected_roles' => count($affectedRoles)
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to perform bulk menu role assignment', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to perform bulk assignment: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Clear role-based menu cache.
+     * 
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function clearRoleCache(): \Illuminate\Http\RedirectResponse
+    {
+        try {
+            $roles = Role::where('is_active', true)->pluck('id')->toArray();
+            $this->clearMenuCacheForRoles($roles);
+
+            Log::info('Menu role cache cleared', [
+                'cleared_by' => Auth::id()
+            ]);
+
+            return redirect()->back()->with('success', 'Menu cache cleared successfully');
+
+        } catch (\Exception $e) {
+            Log::error('Failed to clear menu cache', [
+                'error' => $e->getMessage()
+            ]);
+
+            return redirect()->back()->with('error', 'Failed to clear menu cache: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Clear menu cache for specific roles.
+     * 
+     * @param array $roleIds
+     * @return void
+     */
+    private function clearMenuCacheForRoles(array $roleIds): void
+    {
+        foreach ($roleIds as $roleId) {
+            \Cache::forget("role_menu_{$roleId}");
+            \Cache::forget("menu_tree_role_{$roleId}");
+            \Cache::forget("navigation_menu_role_{$roleId}");
+        }
+        
+        // Also clear general menu cache
+        \Cache::forget('menu_tree');
+        \Cache::forget('navigation_menu');
     }
 }

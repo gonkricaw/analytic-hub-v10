@@ -31,10 +31,15 @@ return new class extends Migration
         
         // Log successful migration test
         DB::table('idbi_system_configs')->updateOrInsert(
-            ['config_key' => 'migration_test_status'],
+            ['key' => 'migration_test_status'],
             [
-                'config_value' => 'passed',
+                'id' => 'test-config-' . uniqid(),
+                'value' => 'passed',
+                'display_name' => 'Migration Test Status',
                 'description' => 'All database migrations and views tested successfully',
+                'group' => 'testing',
+                'data_type' => 'string',
+                'created_at' => now(),
                 'updated_at' => now()
             ]
         );
@@ -187,9 +192,9 @@ return new class extends Migration
             DB::table('idbi_roles')->insert([
                 'id' => $testRoleId,
                 'name' => 'Test Role',
-                'slug' => 'test-role',
+                'display_name' => 'Test Role',
                 'description' => 'Test role for migration testing',
-                'is_active' => true,
+                'status' => 'active',
                 'created_at' => now(),
                 'updated_at' => now()
             ]);
@@ -223,8 +228,9 @@ return new class extends Migration
                 'title' => 'Test Content',
                 'slug' => 'test-content-migration',
                 'content' => 'This is test content for migration testing',
-                'type' => 'article',
+                'type' => 'page',
                 'status' => 'published',
+                'author_id' => $testUserId,
                 'published_at' => now(),
                 'view_count' => 10,
                 'created_at' => now(),
@@ -235,18 +241,10 @@ return new class extends Migration
             DB::table('sessions')->insert([
                 'id' => $testSessionId,
                 'user_id' => $testUserId,
-                'user_email' => 'test-migration@example.com',
                 'ip_address' => '127.0.0.1',
                 'user_agent' => 'Test User Agent',
-                'device_type' => 'desktop',
-                'browser' => 'chrome',
-                'platform' => 'windows',
                 'payload' => 'test_payload',
-                'last_activity' => time(),
-                'is_active' => true,
-                'is_authenticated' => true,
-                'created_at' => now(),
-                'updated_at' => now()
+                'last_activity' => time()
             ]);
             
             // Insert test login attempt
@@ -319,7 +317,7 @@ return new class extends Migration
     public function down(): void
     {
         DB::table('idbi_system_configs')
-            ->where('config_key', 'migration_test_status')
+            ->where('key', 'migration_test_status')
             ->delete();
     }
 };

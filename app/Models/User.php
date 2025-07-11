@@ -177,18 +177,20 @@ class User extends Authenticatable
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class, 'idbi_user_roles', 'user_id', 'role_id')
+                    ->withPivot('id', 'is_active', 'assigned_at', 'expires_at', 'assignment_reason', 'assigned_by', 'revoked_by', 'revoked_at', 'revocation_reason')
                     ->withTimestamps();
     }
 
     /**
-     * Get user permissions through roles.
+     * Get user permissions directly assigned.
      * 
      * @return BelongsToMany
      */
     public function permissions(): BelongsToMany
     {
-        return $this->belongsToMany(Permission::class, 'idbi_role_permissions', 'role_id', 'permission_id')
-                    ->through('roles');
+        return $this->belongsToMany(Permission::class, 'idbi_user_permissions', 'user_id', 'permission_id')
+                    ->withPivot('id', 'granted', 'conditions', 'restrictions', 'expires_at', 'granted_by', 'revoked_by', 'revoked_at', 'revocation_reason')
+                    ->withTimestamps();
     }
 
     /**

@@ -64,6 +64,11 @@ Route::middleware(['auth.user', 'check.status'])->group(function () {
 
 // Admin routes (requires admin role)
 Route::middleware(['auth.user', 'check.status', 'role:admin,super_admin'])->prefix('admin')->name('admin.')->group(function () {
+    // Admin Dashboard
+    Route::get('/dashboard', function () {
+        return view('admin.dashboard');
+    })->name('dashboard');
+    
     // User management routes
     Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
     Route::post('users/{user}/toggle-status', [\App\Http\Controllers\Admin\UserController::class, 'toggleStatus'])->name('users.toggle-status');
@@ -108,12 +113,23 @@ Route::middleware(['auth.user', 'check.status', 'role:admin,super_admin'])->pref
     Route::delete('/permissions/{permission}/children/{child}', [PermissionController::class, 'removeChild'])->name('permissions.remove-child');
     
     // Menu management routes
-    Route::resource('menus', MenuController::class);
+    // Put specific routes before resource routes to avoid conflicts
+    Route::get('menus/bulk-role-assignment', [MenuController::class, 'showBulkRoleAssignment'])->name('menus.bulk-role-assignment.show');
+    Route::post('menus/bulk-role-assignment', [MenuController::class, 'bulkRoleAssignment'])->name('menus.bulk-role-assignment');
     Route::get('menus/data/table', [MenuController::class, 'getData'])->name('menus.data');
+    Route::get('menus/roles/cache/clear', [MenuController::class, 'clearRoleCache'])->name('menus.clear-role-cache');
+    
+    Route::resource('menus', MenuController::class);
+    Route::get('menus/{menu}', [MenuController::class, 'show'])->name('menus.show'); // Explicit show route
     Route::post('menus/{menu}/duplicate', [MenuController::class, 'duplicate'])->name('menus.duplicate');
     Route::post('menus/{menu}/toggle-status', [MenuController::class, 'toggleStatus'])->name('menus.toggle-status');
     Route::post('menus/update-order', [MenuController::class, 'updateOrder'])->name('menus.update-order');
     Route::get('menus/{menu}/preview', [MenuController::class, 'preview'])->name('menus.preview');
+    
+    // Menu-Role Assignment Routes
+    Route::get('menus/{menu}/roles', [MenuController::class, 'showRoleAssignment'])->name('menus.roles');
+    Route::post('menus/{menu}/roles/assign', [MenuController::class, 'assignRoles'])->name('menus.assign-roles');
+    Route::delete('menus/{menu}/roles/{role}', [MenuController::class, 'removeRole'])->name('menus.remove-role');
 });
 
 // Special authentication flow routes (accessible when authenticated but with specific conditions)

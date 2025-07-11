@@ -102,20 +102,23 @@ class UserObserver
     {
         try {
             ActivityLog::create([
-                'user_id' => Auth::id(),
+                'causer_type' => 'App\\Models\\User',
+                'causer_id' => Auth::id(),
                 'subject_type' => User::class,
                 'subject_id' => $user->id,
+                'event' => $action,
                 'action' => $action,
                 'description' => "User {$action}: {$user->email}",
                 'properties' => $properties,
                 'ip_address' => Request::ip(),
                 'user_agent' => Request::userAgent(),
-                'url' => Request::fullUrl(),
-                'method' => Request::method(),
+                'request_url' => Request::fullUrl(),
+                'request_method' => Request::method(),
                 'is_sensitive' => in_array($action, ['created', 'deleted', 'restored']),
                 'severity' => $this->getSeverity($action),
                 'category' => 'user_management',
-                'tags' => ['user', 'authentication', $action],
+                'module' => 'users',
+                'type' => 'admin'
             ]);
         } catch (\Exception $e) {
             // Log the error but don't break the application

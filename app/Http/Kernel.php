@@ -82,6 +82,7 @@ class Kernel extends HttpKernel
         // Role & Permission Middleware
         'role' => \App\Http\Middleware\CheckRole::class,
         'permission' => \App\Http\Middleware\CheckPermission::class,
+        'menu.access' => \App\Http\Middleware\CheckMenuAccess::class,
         
         // Additional Security & Compliance Middleware
         'terms.check' => \App\Http\Middleware\CheckTermsAcceptance::class,

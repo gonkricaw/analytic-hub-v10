@@ -194,6 +194,35 @@
             font-size: 0.75rem;
         }
         
+        /* Submenu Styles */
+        .nav-submenu {
+            background: rgba(0, 0, 0, 0.2);
+            border-left: 2px solid #444;
+            margin-left: 1.5rem;
+        }
+        
+        .nav-sublink {
+            display: block;
+            padding: 0.5rem 1rem;
+            color: #aaa;
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+            border-left: 2px solid transparent;
+        }
+        
+        .nav-sublink:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            border-left-color: var(--accent-color);
+        }
+        
+        .nav-sublink.active {
+            background: rgba(255, 122, 0, 0.15);
+            color: var(--accent-color);
+            border-left-color: var(--accent-color);
+        }
+        
         /* Main Content */
         .main-content {
             flex: 1;
@@ -440,117 +469,60 @@
             </div>
             
             <div class="sidebar-nav">
-                <!-- Dashboard -->
-                <div class="nav-section">
-                    <div class="nav-section-title">Main</div>
-                    <div class="nav-item">
-                        <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                            <i class="fas fa-tachometer-alt"></i>
-                            Dashboard
-                        </a>
+                @if(isset($navigationMenu) && $navigationMenu->isNotEmpty())
+                    @foreach($navigationMenu as $menu)
+                        @if($menu->children && $menu->children->isNotEmpty())
+                            <!-- Section with children -->
+                            <div class="nav-section">
+                                <div class="nav-section-title">{{ $menu->title }}</div>
+                                @foreach($menu->children as $child)
+                                    <div class="nav-item">
+                                        <a href="{{ $child->url ?: '#' }}" 
+                                           class="nav-link {{ $menuHelper::isMenuActive($child, request()) ? 'active' : '' }}">
+                                            @if($child->icon)
+                                                <i class="{{ $child->icon }}"></i>
+                                            @endif
+                                            {{ $child->title }}
+                                        </a>
+                                        @if($child->children && $child->children->isNotEmpty())
+                                            <div class="nav-submenu">
+                                                @foreach($child->children as $grandchild)
+                                                    <a href="{{ $grandchild->url ?: '#' }}" 
+                                                       class="nav-sublink {{ $menuHelper::isMenuActive($grandchild, request()) ? 'active' : '' }}">
+                                                        {{ $grandchild->title }}
+                                                    </a>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <!-- Single menu item -->
+                            <div class="nav-item">
+                                <a href="{{ $menu->url ?: '#' }}" 
+                                   class="nav-link {{ $menuHelper::isMenuActive($menu, request()) ? 'active' : '' }}">
+                                    @if($menu->icon)
+                                        <i class="{{ $menu->icon }}"></i>
+                                    @endif
+                                    {{ $menu->title }}
+                                </a>
+                            </div>
+                        @endif
+                    @endforeach
+                @else
+                    <!-- Fallback navigation when no dynamic menu is available -->
+                    <div class="nav-section">
+                        <div class="nav-section-title">Main</div>
+                        <div class="nav-item">
+                            <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                                <i class="fas fa-tachometer-alt"></i>
+                                Dashboard
+                            </a>
+                        </div>
                     </div>
-                </div>
-                
-                <!-- Administration -->
-                @can('access-admin')
-                <div class="nav-section">
-                    <div class="nav-section-title">Administration</div>
-                    
-                    <!-- User Management -->
-                    <div class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="fas fa-users"></i>
-                            User Management
-                        </a>
-                    </div>
-                    
-                    <!-- Role Management -->
-                    <div class="nav-item">
-                        <a href="{{ route('admin.roles.index') }}" class="nav-link {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
-                            <i class="fas fa-user-shield"></i>
-                            Role Management
-                        </a>
-                    </div>
-                    
-                    <!-- Permission Management -->
-                    <div class="nav-item">
-                        <a href="{{ route('admin.permissions.index') }}" class="nav-link {{ request()->routeIs('admin.permissions.*') ? 'active' : '' }}">
-                            <i class="fas fa-key"></i>
-                            Permission Management
-                        </a>
-                    </div>
-                    
-                    <!-- Role-Permission Assignment -->
-                    <div class="nav-item">
-                        <a href="{{ route('admin.role-permissions.index') }}" class="nav-link {{ request()->routeIs('admin.role-permissions.*') ? 'active' : '' }}">
-                            <i class="fas fa-users-cog"></i>
-                            Role-Permission Matrix
-                        </a>
-                    </div>
-                    
-                    <!-- System Settings -->
-                    <div class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="fas fa-cogs"></i>
-                            System Settings
-                        </a>
-                    </div>
-                </div>
-                @endcan
-                
-                <!-- Content Management -->
-                <div class="nav-section">
-                    <div class="nav-section-title">Content</div>
-                    
-                    <div class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="fas fa-sitemap"></i>
-                            Menu Management
-                        </a>
-                    </div>
-                    
-                    <div class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="fas fa-file-alt"></i>
-                            Content Pages
-                        </a>
-                    </div>
-                    
-                    <div class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="fas fa-chart-bar"></i>
-                            Reports
-                        </a>
-                    </div>
-                </div>
-                
-                <!-- Security -->
-                @can('access-security')
-                <div class="nav-section">
-                    <div class="nav-section-title">Security</div>
-                    
-                    <div class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="fas fa-shield-alt"></i>
-                            IP Management
-                        </a>
-                    </div>
-                    
-                    <div class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="fas fa-history"></i>
-                            Activity Logs
-                        </a>
-                    </div>
-                    
-                    <div class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            Security Alerts
-                        </a>
-                    </div>
-                </div>
-                @endcan
+                @endif
+
             </div>
         </nav>
         
@@ -565,10 +537,25 @@
                     
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb">
-                            <li class="breadcrumb-item">
-                                <a href="{{ route('dashboard') }}">Dashboard</a>
-                            </li>
-                            @yield('breadcrumb')
+                            @if(isset($breadcrumbs) && $breadcrumbs->isNotEmpty())
+                                @foreach($breadcrumbs as $breadcrumb)
+                                    @if($loop->last)
+                                        <li class="breadcrumb-item active" aria-current="page">
+                                            {{ $breadcrumb['title'] }}
+                                        </li>
+                                    @else
+                                        <li class="breadcrumb-item">
+                                            <a href="{{ $breadcrumb['url'] ?: '#' }}">{{ $breadcrumb['title'] }}</a>
+                                        </li>
+                                    @endif
+                                @endforeach
+                            @else
+                                <!-- Fallback breadcrumb -->
+                                <li class="breadcrumb-item">
+                                    <a href="{{ route('dashboard') }}">Dashboard</a>
+                                </li>
+                                @yield('breadcrumb')
+                            @endif
                         </ol>
                     </nav>
                 </div>
