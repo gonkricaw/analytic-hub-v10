@@ -313,6 +313,24 @@ class MenuSeeder extends Seeder
                 'required_roles' => ['super_admin']
             ]);
 
+            $this->createMenu([
+                'name' => 'system_configuration',
+                'title' => 'System Configuration',
+                'description' => 'Manage system settings and configuration',
+                'url' => '/admin/system-config',
+                'icon' => 'fas fa-sliders-h',
+                'type' => 'link',
+                'target' => '_self',
+                'sort_order' => 3,
+                'level' => 2,
+                'parent_id' => $systemSettings->id,
+                'is_active' => true,
+                'is_external' => false,
+                'is_system_menu' => true,
+                'required_permission_id' => $adminPermission?->id,
+                'required_roles' => ['super_admin']
+            ]);
+
             // External menu example
             $this->createMenu([
                 'name' => 'external_docs',

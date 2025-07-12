@@ -336,7 +336,7 @@ class AuthController extends Controller
             'email' => $email,
             'ip_address' => $ipAddress,
             'user_agent' => $userAgent,
-            'success' => $success,
+            'status' => $success ? 'success' : 'failed',
             'attempted_at' => Carbon::now()
         ]);
     }

@@ -196,6 +196,53 @@ Route::middleware(['auth.user', 'check.status', 'role:admin,super_admin'])->pref
     Route::get('contents/analytics/summary', [ContentController::class, 'getVisitSummary'])->name('contents.visit-summary');
     Route::get('contents/analytics/export', [ContentController::class, 'exportVisitAnalytics'])->name('contents.export-analytics');
     
+    // System Configuration routes
+    Route::prefix('system-config')->name('system-config.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\SystemConfigController::class, 'index'])->name('index');
+        Route::post('/update', [\App\Http\Controllers\Admin\SystemConfigController::class, 'update'])->name('update');
+        
+        // File upload routes
+        Route::post('/upload/logo', [\App\Http\Controllers\Admin\SystemConfigController::class, 'uploadLogo'])->name('upload.logo');
+        Route::post('/upload/background', [\App\Http\Controllers\Admin\SystemConfigController::class, 'uploadBackground'])->name('upload.background');
+        
+        // Maintenance mode routes
+        Route::post('/maintenance/toggle', [\App\Http\Controllers\Admin\SystemConfigController::class, 'toggleMaintenance'])->name('maintenance.toggle');
+        Route::get('/maintenance-preview', function () {
+            return view('maintenance');
+        })->name('maintenance.preview');
+        
+        // Health check routes
+        Route::get('/health-check', [\App\Http\Controllers\Admin\SystemConfigController::class, 'healthCheck'])->name('health-check');
+        Route::get('/storage-usage', [\App\Http\Controllers\Admin\SystemConfigController::class, 'getStorageUsage'])->name('storage-usage');
+        
+        // Email testing routes
+        Route::post('/email/send-test', [\App\Http\Controllers\Admin\SystemConfigController::class, 'sendTestEmail'])->name('email.send-test');
+        Route::post('/email/test-connection', [\App\Http\Controllers\Admin\SystemConfigController::class, 'testEmailConnection'])->name('email.test-connection');
+        Route::get('/email/queue-status', [\App\Http\Controllers\Admin\SystemConfigController::class, 'getEmailQueueStatus'])->name('email.queue-status');
+        Route::post('/email/clear-queue', [\App\Http\Controllers\Admin\SystemConfigController::class, 'clearEmailQueue'])->name('email.clear-queue');
+        
+        // Backup routes
+        Route::post('/backup/create', [\App\Http\Controllers\Admin\SystemConfigController::class, 'createBackup'])->name('backup.create');
+        Route::get('/backup/history', [\App\Http\Controllers\Admin\SystemConfigController::class, 'getBackupHistory'])->name('backup.history');
+        Route::post('/backup/restore', [\App\Http\Controllers\Admin\SystemConfigController::class, 'restoreBackup'])->name('backup.restore');
+        
+        // Cleanup routes
+        Route::post('/cleanup/temp-files', [\App\Http\Controllers\Admin\SystemConfigController::class, 'cleanupTempFiles'])->name('cleanup.temp-files');
+        Route::post('/cleanup/logs', [\App\Http\Controllers\Admin\SystemConfigController::class, 'cleanupLogs'])->name('cleanup.logs');
+        Route::post('/cleanup/caches', [\App\Http\Controllers\Admin\SystemConfigController::class, 'clearCaches'])->name('cleanup.caches');
+        
+        // Log management routes
+        Route::get('/logs/files', [\App\Http\Controllers\Admin\SystemConfigController::class, 'getLogFiles'])->name('logs.files');
+        Route::get('/logs/content', [\App\Http\Controllers\Admin\SystemConfigController::class, 'getLogContent'])->name('logs.content');
+        Route::get('/logs/download', [\App\Http\Controllers\Admin\SystemConfigController::class, 'downloadLogFile'])->name('logs.download');
+        Route::post('/logs/clear', [\App\Http\Controllers\Admin\SystemConfigController::class, 'clearLogFile'])->name('logs.clear');
+        Route::post('/logs/export', [\App\Http\Controllers\Admin\SystemConfigController::class, 'exportLogs'])->name('logs.export');
+        Route::post('/logs/archive', [\App\Http\Controllers\Admin\SystemConfigController::class, 'archiveLogs'])->name('logs.archive');
+        Route::post('/logs/rotate', [\App\Http\Controllers\Admin\SystemConfigController::class, 'rotateLogs'])->name('logs.rotate');
+        Route::post('/logs/delete-old', [\App\Http\Controllers\Admin\SystemConfigController::class, 'deleteOldLogs'])->name('logs.delete-old');
+        Route::get('/logs/stats', [\App\Http\Controllers\Admin\SystemConfigController::class, 'getLogStats'])->name('logs.stats');
+    });
+    
     // Popular content analytics dashboard routes
     Route::prefix('analytics/popular-content')->name('analytics.popular-content.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\PopularContentAnalyticsController::class, 'index'])->name('index');
@@ -322,6 +369,19 @@ Route::prefix('email')->middleware(['email.tracking'])->group(function () {
         // Middleware handles the processing
         return response('OK', 200);
     })->name('email.webhook.generic');
+    
+    // Monitoring & Logs routes
+    Route::prefix('monitoring')->name('monitoring.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\MonitoringController::class, 'index'])->name('index');
+        Route::get('/activity-logs', [\App\Http\Controllers\Admin\MonitoringController::class, 'activityLogs'])->name('activity-logs');
+        Route::get('/error-logs', [\App\Http\Controllers\Admin\MonitoringController::class, 'errorLogs'])->name('error-logs');
+        Route::get('/security-logs', [\App\Http\Controllers\Admin\MonitoringController::class, 'securityLogs'])->name('security-logs');
+        Route::get('/performance-logs', [\App\Http\Controllers\Admin\MonitoringController::class, 'performanceLogs'])->name('performance-logs');
+        Route::get('/query-logs', [\App\Http\Controllers\Admin\MonitoringController::class, 'queryLogs'])->name('query-logs');
+        Route::get('/email-logs', [\App\Http\Controllers\Admin\MonitoringController::class, 'emailLogs'])->name('email-logs');
+        Route::get('/system-metrics', [\App\Http\Controllers\Admin\MonitoringController::class, 'systemMetrics'])->name('system-metrics');
+        Route::get('/health-check', [\App\Http\Controllers\Admin\MonitoringController::class, 'healthCheck'])->name('health-check');
+    });
 });
 
 // Special authentication flow routes (accessible when authenticated but with specific conditions)

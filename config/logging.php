@@ -54,7 +54,7 @@ return [
 
         'stack' => [
             'driver' => 'stack',
-            'channels' => explode(',', (string) env('LOG_STACK', 'daily,security,activity')),
+            'channels' => explode(',', (string) env('LOG_STACK', 'daily,security,activity,audit,performance,query')),
             'ignore_exceptions' => false,
         ],
 
@@ -70,6 +70,22 @@ return [
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
             'days' => env('LOG_DAILY_DAYS', 14),
+            'replace_placeholders' => true,
+        ],
+
+        'audit' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/audit.log'),
+            'level' => env('AUDIT_LOG_LEVEL', 'info'),
+            'days' => env('AUDIT_LOG_RETENTION_DAYS', 365),
+            'replace_placeholders' => true,
+        ],
+
+        'sql_injection' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/sql-injection.log'),
+            'level' => 'warning',
+            'days' => 90,
             'replace_placeholders' => true,
         ],
 
@@ -157,6 +173,30 @@ return [
             'path' => storage_path('logs/audit.log'),
             'level' => env('LOG_LEVEL', 'info'),
             'days' => env('LOG_AUDIT_DAYS', 365), // Keep audit logs for 1 year
+            'replace_placeholders' => true,
+        ],
+
+        'performance' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/performance.log'),
+            'level' => env('LOG_LEVEL', 'info'),
+            'days' => env('LOG_PERFORMANCE_DAYS', 30), // Keep performance logs for 30 days
+            'replace_placeholders' => true,
+        ],
+
+        'query' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/query.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => env('LOG_QUERY_DAYS', 7), // Keep query logs for 7 days
+            'replace_placeholders' => true,
+        ],
+
+        'error' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/error.log'),
+            'level' => 'error',
+            'days' => env('LOG_ERROR_DAYS', 90), // Keep error logs for 90 days
             'replace_placeholders' => true,
         ],
 

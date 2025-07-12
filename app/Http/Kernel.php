@@ -24,12 +24,18 @@ class Kernel extends HttpKernel
     protected $middleware = [
         // \App\Http\Middleware\TrustHosts::class,
         \App\Http\Middleware\TrustProxies::class,
-        \Illuminate\Http\Middleware\HandleCors::class,
+        \Fruitcake\Cors\HandleCors::class,
         \App\Http\Middleware\PreventRequestsDuringMaintenance::class,
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
-        \App\Http\Middleware\CheckBlacklistedIp::class, // Custom IP blacklist check
+        \App\Http\Middleware\CheckBlacklistedIp::class,
+        \App\Http\Middleware\HttpsEnforcement::class,
+        \App\Http\Middleware\SecurityHeaders::class,
+        \App\Http\Middleware\SqlInjectionPrevention::class,
+        \App\Http\Middleware\ContentSecurityPolicy::class,
+        \App\Http\Middleware\AuditLogging::class,
+        \App\Http\Middleware\PerformanceMonitoring::class,
     ];
 
     /**
@@ -93,5 +99,15 @@ class Kernel extends HttpKernel
         // Analytics & Tracking Middleware
         'track.visits' => \App\Http\Middleware\TrackContentVisits::class,
         'email.tracking' => \App\Http\Middleware\EmailTrackingMiddleware::class,
+        
+        // Security Middleware
+        'security.headers' => \App\Http\Middleware\SecurityHeaders::class,
+        'https.enforcement' => \App\Http\Middleware\HttpsEnforcement::class,
+        'sql.injection.prevention' => \App\Http\Middleware\SqlInjectionPrevention::class,
+        'audit.logging' => \App\Http\Middleware\AuditLogging::class,
+        'content.security.policy' => \App\Http\Middleware\ContentSecurityPolicy::class,
+        
+        // Performance & Monitoring Middleware
+        'performance.monitoring' => \App\Http\Middleware\PerformanceMonitoring::class,
     ];
 }

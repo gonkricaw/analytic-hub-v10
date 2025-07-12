@@ -112,6 +112,19 @@ class LoginAttempt extends Model
     ];
 
     /**
+     * The model's default values for attributes.
+     */
+    protected $attributes = [
+        'status' => 'failed',
+        'is_suspicious' => false,
+        'risk_score' => 0,
+        'is_blocked' => false,
+        'remember_me' => false,
+        'two_factor_success' => false,
+        'attempts_count' => 1,
+    ];
+
+    /**
      * The attributes that should be cast.
      */
     protected $casts = [
