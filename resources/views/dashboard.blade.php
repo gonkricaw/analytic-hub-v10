@@ -3,277 +3,214 @@
 @section('title', 'Dashboard')
 
 @section('breadcrumb')
-    <li class="breadcrumb-item active">Dashboard</li>
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+    </ol>
+</nav>
 @endsection
 
-@push('styles')
-<style>
-    .welcome-card {
-        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-        color: white;
-        border: none;
-        margin-bottom: 2rem;
-    }
-    
-    .stat-card {
-        background: var(--dark-bg);
-        border: 1px solid #333;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    
-    .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-    }
-    
-    .stat-number {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-        color: var(--accent-color);
-    }
-    
-    .stat-label {
-        font-size: 1rem;
-        color: #ccc;
-    }
-    
-    .activity-item {
-        padding: 1rem 0;
-        border-bottom: 1px solid #333;
-    }
-    
-    .activity-item:last-child {
-        border-bottom: none;
-    }
-    
-    .activity-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: var(--accent-color);
-        color: white;
-        margin-right: 1rem;
-    }
-    
-    .quick-action-card {
-        background: var(--dark-bg);
-        border: 1px solid #333;
-        transition: all 0.3s ease;
-        cursor: pointer;
-    }
-    
-    .quick-action-card:hover {
-        border-color: var(--accent-color);
-        transform: translateY(-2px);
-    }
-    
-    .chart-container {
-        background: var(--dark-bg);
-        border: 1px solid #333;
-        border-radius: 0.5rem;
-        padding: 1.5rem;
-    }
-</style>
+@push('scripts')
+<script>
+    // Initialize dashboard widgets
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize charts if they exist
+        if (typeof initializeCharts === 'function') {
+            initializeCharts();
+        }
+        
+        // Initialize calendar if it exists
+        if (typeof initializeCalendar === 'function') {
+            initializeCalendar();
+        }
+        
+        // Initialize task progress if it exists
+        if (typeof initializeTaskProgress === 'function') {
+            initializeTaskProgress();
+        }
+        
+        // Auto-refresh system status every 30 seconds
+        setInterval(function() {
+            if (typeof refreshSystemStatus === 'function') {
+                refreshSystemStatus();
+            }
+        }, 30000);
+        
+        // Auto-refresh recent activity every 60 seconds
+        setInterval(function() {
+            if (typeof refreshRecentActivity === 'function') {
+                refreshRecentActivity();
+            }
+        }, 60000);
+    });
+</script>
 @endpush
 
 @section('content')
-<!-- Welcome Card -->
-<div class="card welcome-card">
-    <div class="card-body text-center py-5">
-        <h1 class="display-4 mb-3">
-            <i class="fas fa-tachometer-alt me-3"></i>
-            Welcome to Analytics Hub
-        </h1>
-        <p class="lead mb-4">Hello, {{ auth()->user()->name }}! Here's your dashboard overview.</p>
-        <div class="row text-center">
-            <div class="col-md-4">
-                <i class="fas fa-clock fa-2x mb-2"></i>
-                <p class="mb-0">Last Login</p>
-                <small>{{ auth()->user()->last_seen_at ? auth()->user()->last_seen_at->format('M d, Y H:i') : 'First time' }}</small>
-            </div>
-            <div class="col-md-4">
-                <i class="fas fa-shield-alt fa-2x mb-2"></i>
-                <p class="mb-0">Account Status</p>
-                <small class="badge bg-success">Active</small>
-            </div>
-            <div class="col-md-4">
-                <i class="fas fa-envelope fa-2x mb-2"></i>
-                <p class="mb-0">Email Status</p>
-                <small class="badge {{ auth()->user()->email_verified_at ? 'bg-success' : 'bg-warning' }}">
-                    {{ auth()->user()->email_verified_at ? 'Verified' : 'Pending' }}
-                </small>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- Include Widget Styles and Scripts -->
+<link href="{{ asset('css/widgets.css') }}" rel="stylesheet">
+<script src="{{ asset('js/widgets.js') }}" defer></script>
 
-<!-- Statistics Cards -->
-<div class="row mb-4">
-    <div class="col-md-3 mb-3">
-        <div class="card stat-card">
-            <div class="card-body text-center">
-                <i class="fas fa-users fa-3x mb-3 opacity-75"></i>
-                <div class="stat-number">1,234</div>
-                <div class="stat-label">Total Users</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3 mb-3">
-        <div class="card stat-card">
-            <div class="card-body text-center">
-                <i class="fas fa-chart-bar fa-3x mb-3 opacity-75"></i>
-                <div class="stat-number">5,678</div>
-                <div class="stat-label">Analytics Reports</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3 mb-3">
-        <div class="card stat-card">
-            <div class="card-body text-center">
-                <i class="fas fa-eye fa-3x mb-3 opacity-75"></i>
-                <div class="stat-number">98,765</div>
-                <div class="stat-label">Page Views</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3 mb-3">
-        <div class="card stat-card">
-            <div class="card-body text-center">
-                <i class="fas fa-clock fa-3x mb-3 opacity-75"></i>
-                <div class="stat-number">24/7</div>
-                <div class="stat-label">Uptime</div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Content Row -->
-<div class="row">
-    <!-- Recent Activity -->
-    <div class="col-md-8 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-history me-2"></i>
-                    Recent Activity
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="activity-item d-flex align-items-center">
-                    <div class="activity-icon">
-                        <i class="fas fa-sign-in-alt"></i>
-                    </div>
-                    <div class="flex-grow-1">
-                        <strong>User Login</strong>
-                        <p class="mb-1 text-muted">{{ auth()->user()->name }} logged in successfully</p>
-                        <small class="text-muted">
-                            <i class="fas fa-clock me-1"></i>
-                            {{ now()->format('M d, Y H:i') }}
-                        </small>
-                    </div>
-                </div>
-                
-                <div class="activity-item d-flex align-items-center">
-                    <div class="activity-icon">
-                        <i class="fas fa-sync-alt"></i>
-                    </div>
-                    <div class="flex-grow-1">
-                        <strong>System Update</strong>
-                        <p class="mb-1 text-muted">Analytics Hub updated to version 1.0.0</p>
-                        <small class="text-muted">
-                            <i class="fas fa-clock me-1"></i>
-                            {{ now()->subHours(2)->format('M d, Y H:i') }}
-                        </small>
-                    </div>
-                </div>
-                
-                <div class="activity-item d-flex align-items-center">
-                    <div class="activity-icon">
-                        <i class="fas fa-shield-alt"></i>
-                    </div>
-                    <div class="flex-grow-1">
-                        <strong>Security Scan</strong>
-                        <p class="mb-1 text-muted">Automated security scan completed successfully</p>
-                        <small class="text-muted">
-                            <i class="fas fa-clock me-1"></i>
-                            {{ now()->subHours(6)->format('M d, Y H:i') }}
-                        </small>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+<style>
+    .welcome-card {
+        background: linear-gradient(135deg, #FF7A00 0%, #e66a00 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(255, 122, 0, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
     
-    <!-- Quick Actions -->
-    <div class="col-md-4 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-bolt me-2"></i>
-                    Quick Actions
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="d-grid gap-2">
-                    <div class="card quick-action-card">
-                        <div class="card-body text-center py-3">
-                            <i class="fas fa-plus fa-2x mb-2"></i>
-                            <h6 class="mb-0">Create Report</h6>
-                        </div>
-                    </div>
-                    <div class="card quick-action-card">
-                        <div class="card-body text-center py-3">
-                            <i class="fas fa-download fa-2x mb-2"></i>
-                            <h6 class="mb-0">Export Data</h6>
-                        </div>
-                    </div>
-                    <div class="card quick-action-card">
-                        <div class="card-body text-center py-3">
-                            <i class="fas fa-cog fa-2x mb-2"></i>
-                            <h6 class="mb-0">Settings</h6>
-                        </div>
-                    </div>
-                    <div class="card quick-action-card">
-                        <div class="card-body text-center py-3">
-                            <i class="fas fa-question-circle fa-2x mb-2"></i>
-                            <h6 class="mb-0">Help & Support</h6>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- System Status -->
-        <div class="card mt-3">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-server me-2"></i>
-                    System Status
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span>Database</span>
+    .welcome-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        transform: rotate(45deg);
+    }
+    
+    .welcome-card h2 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .welcome-card p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin-bottom: 0;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .dashboard-section {
+        margin-bottom: 30px;
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .section-title i {
+        color: #FF7A00;
+    }
+</style>
+<!-- Welcome Card -->
+<div class="welcome-card">
+    <h2><i class="fas fa-tachometer-alt me-2"></i>Welcome to Analytics Hub</h2>
+    <p>Hello, {{ auth()->user()->name }}! Here's your dashboard overview.</p>
+</div>
+
+<!-- Dashboard Widget Grid -->
+<x-widget-grid>
+    <!-- Image Banner Widget (Full Width) -->
+    <x-widgets.image-banner 
+        :size="'col-12'" 
+        :refresh-interval="600" 
+        :permission="null" 
+    />
+    
+    <!-- Marquee Text Widget (Full Width) -->
+    <x-widgets.marquee-text 
+        :size="'col-12'" 
+        :refresh-interval="300" 
+        :permission="null" 
+    />
+    
+    <!-- Digital Clock Widget -->
+    <x-widgets.digital-clock 
+        :size="'col-lg-3 col-md-6'" 
+        :refresh-interval="1" 
+        :permission="null" 
+    />
+    
+    <!-- Online Users Widget -->
+    <x-widgets.online-users 
+        :size="'col-lg-3 col-md-6'" 
+        :refresh-interval="30" 
+        :permission="null" 
+    />
+    
+    <!-- Top Active Users Widget -->
+    <x-widgets.top-active-users 
+        :size="'col-lg-3 col-md-6'" 
+        :refresh-interval="300" 
+        :permission="'view_users'" 
+    />
+    
+    <!-- New Users Widget -->
+    <x-widgets.new-users 
+        :size="'col-lg-3 col-md-6'" 
+        :refresh-interval="300" 
+        :permission="'view_users'" 
+    />
+    
+    <!-- Login Activity Chart Widget -->
+    <x-widgets.login-activity-chart 
+        :size="'col-lg-8'" 
+        :refresh-interval="300" 
+        :permission="'view_analytics'" 
+    />
+    
+    <!-- Latest Announcements Widget -->
+    <x-widgets.latest-announcements 
+        :size="'col-lg-4'" 
+        :refresh-interval="120" 
+        :permission="null" 
+    />
+    
+    <!-- Popular Content Widget -->
+    <x-widgets.popular-content 
+        :size="'col-lg-6'" 
+        :refresh-interval="300" 
+        :permission="'view_content'" 
+    />
+    
+    <!-- System Status Widget -->
+    <div class="col-lg-6">
+        <x-widget-container 
+            title="System Status" 
+            icon="fas fa-server" 
+            id="system-status-widget" 
+            :refresh-interval="60" 
+            :refreshable="true" 
+            :permission="'view_system_status'" 
+            :size="'col-12'"
+        >
+            <div class="system-status-container p-3">
+                <div class="status-item d-flex justify-content-between align-items-center mb-3">
+                    <span><i class="fas fa-database me-2"></i>Database</span>
                     <span class="badge bg-success">Online</span>
                 </div>
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span>Cache</span>
+                <div class="status-item d-flex justify-content-between align-items-center mb-3">
+                    <span><i class="fas fa-memory me-2"></i>Cache</span>
                     <span class="badge bg-success">Active</span>
                 </div>
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span>Queue</span>
+                <div class="status-item d-flex justify-content-between align-items-center mb-3">
+                    <span><i class="fas fa-tasks me-2"></i>Queue</span>
                     <span class="badge bg-success">Running</span>
                 </div>
-                <div class="d-flex justify-content-between align-items-center">
-                    <span>Storage</span>
+                <div class="status-item d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-hdd me-2"></i>Storage</span>
                     <span class="badge bg-warning">75% Used</span>
                 </div>
             </div>
-        </div>
+        </x-widget-container>
     </div>
-</div>
+</x-widget-grid>
 @endsection

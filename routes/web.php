@@ -50,6 +50,20 @@ Route::middleware(['auth.user', 'check.status'])->group(function () {
         return view('dashboard');
     })->name('dashboard');
     
+    // Widget API routes for dashboard
+    Route::prefix('api/widgets')->name('widgets.')->group(function () {
+        Route::get('/clock', [\App\Http\Controllers\WidgetController::class, 'getClock'])->name('clock');
+        Route::get('/login-activity', [\App\Http\Controllers\WidgetController::class, 'getLoginActivity'])->name('login-activity');
+        Route::get('/active-users', [\App\Http\Controllers\WidgetController::class, 'getActiveUsers'])->name('active-users');
+        Route::get('/online-users', [\App\Http\Controllers\WidgetController::class, 'getOnlineUsers'])->name('online-users');
+        Route::get('/popular-content', [\App\Http\Controllers\WidgetController::class, 'getPopularContent'])->name('popular-content');
+        Route::get('/announcements', [\App\Http\Controllers\WidgetController::class, 'getAnnouncements'])->name('announcements');
+        Route::get('/new-users', [\App\Http\Controllers\WidgetController::class, 'getNewUsers'])->name('new-users');
+        Route::get('/marquee', [\App\Http\Controllers\WidgetController::class, 'getMarquee'])->name('marquee');
+        Route::get('/banner', [\App\Http\Controllers\WidgetController::class, 'getBanner'])->name('banner');
+        Route::post('/clear-cache', [\App\Http\Controllers\WidgetController::class, 'clearCache'])->name('clear-cache');
+    });
+    
     // Public content viewing routes
     Route::get('/content/{slug}', [\App\Http\Controllers\ContentViewController::class, 'show'])->name('content.show');
     Route::get('/content/{uuid}/embed', [\App\Http\Controllers\ContentViewController::class, 'embed'])->name('content.embed');
