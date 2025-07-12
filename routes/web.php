@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PasswordChangeController;
 use App\Http\Controllers\PasswordResetController;
@@ -207,10 +208,84 @@ Route::middleware(['auth.user', 'check.status', 'role:admin,super_admin'])->pref
         Route::post('/import', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'import'])->name('import');
     });
     
+    // Email queue management routes
+    Route::prefix('email-queue')->name('email-queue.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\EmailQueueController::class, 'index'])->name('index');
+        Route::get('/data', [\App\Http\Controllers\Admin\EmailQueueController::class, 'data'])->name('data');
+        Route::get('/statistics', [\App\Http\Controllers\Admin\EmailQueueController::class, 'statistics'])->name('statistics');
+        Route::get('/{emailQueue}', [\App\Http\Controllers\Admin\EmailQueueController::class, 'show'])->name('show');
+        Route::post('/retry', [\App\Http\Controllers\Admin\EmailQueueController::class, 'retry'])->name('retry');
+        Route::post('/cancel', [\App\Http\Controllers\Admin\EmailQueueController::class, 'cancel'])->name('cancel');
+        Route::post('/cleanup', [\App\Http\Controllers\Admin\EmailQueueController::class, 'cleanup'])->name('cleanup');
+        Route::post('/send-bulk', [\App\Http\Controllers\Admin\EmailQueueController::class, 'sendBulk'])->name('send-bulk');
+    });
+    
     // Upload routes for content editor
     Route::post('upload/image', [\App\Http\Controllers\Admin\UploadController::class, 'uploadImage'])->name('upload.image');
     Route::post('upload/file', [\App\Http\Controllers\Admin\UploadController::class, 'uploadFile'])->name('upload.file');
     Route::delete('upload/file', [\App\Http\Controllers\Admin\UploadController::class, 'deleteFile'])->name('upload.delete');
+});
+
+// Email tracking routes (public, no authentication required)
+Route::prefix('email')->middleware(['email.tracking'])->group(function () {
+    // Email open tracking (1x1 pixel image)
+    Route::get('/open/{messageId}', function ($messageId) {
+        // Return a 1x1 transparent pixel
+        $pixel = base64_decode('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7');
+        return response($pixel, 200, [
+            'Content-Type' => 'image/gif',
+            'Content-Length' => strlen($pixel),
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0'
+        ]);
+    })->name('email.track.open');
+    
+    // Email click tracking (redirect)
+    Route::get('/click/{messageId}', function ($messageId, Request $request) {
+        $url = $request->get('url');
+        if ($url && filter_var($url, FILTER_VALIDATE_URL)) {
+            return redirect($url);
+        }
+        return response('Invalid URL', 400);
+    })->name('email.track.click');
+    
+    // Email unsubscribe page
+    Route::get('/unsubscribe/{messageId?}', function ($messageId = null, Request $request) {
+        return view('emails.unsubscribe', [
+            'messageId' => $messageId,
+            'email' => $request->get('email')
+        ]);
+    })->name('email.unsubscribe');
+    
+    // Process unsubscribe request
+    Route::post('/unsubscribe', function (Request $request) {
+        // The middleware will handle the tracking
+        return view('emails.unsubscribed', [
+            'email' => $request->get('email')
+        ]);
+    })->name('email.unsubscribe.process');
+    
+    // Webhook endpoints for email service providers
+    Route::post('/webhook/sendgrid', function (Request $request) {
+        // Middleware handles the processing
+        return response('OK', 200);
+    })->name('email.webhook.sendgrid');
+    
+    Route::post('/webhook/mailgun', function (Request $request) {
+        // Middleware handles the processing
+        return response('OK', 200);
+    })->name('email.webhook.mailgun');
+    
+    Route::post('/webhook/ses', function (Request $request) {
+        // Middleware handles the processing
+        return response('OK', 200);
+    })->name('email.webhook.ses');
+    
+    Route::post('/webhook/generic', function (Request $request) {
+        // Middleware handles the processing
+        return response('OK', 200);
+    })->name('email.webhook.generic');
 });
 
 // Special authentication flow routes (accessible when authenticated but with specific conditions)

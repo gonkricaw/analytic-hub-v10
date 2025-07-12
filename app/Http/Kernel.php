@@ -92,5 +92,6 @@ class Kernel extends HttpKernel
         
         // Analytics & Tracking Middleware
         'track.visits' => \App\Http\Middleware\TrackContentVisits::class,
+        'email.tracking' => \App\Http\Middleware\EmailTrackingMiddleware::class,
     ];
 }

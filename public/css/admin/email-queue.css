@@ -1,0 +1,587 @@
+/**
+ * Email Queue Management Styles
+ * 
+ * Provides styling for the email queue monitoring and management interface.
+ * Includes styles for dashboard, statistics, charts, tables, and modals.
+ * 
+ * @package Analytics Hub
+ * @version 1.0.0
+ */
+
+/* ==========================================================================
+   Email Queue Dashboard
+   ========================================================================== */
+
+.email-queue-dashboard {
+    background-color: #f8f9fc;
+    min-height: 100vh;
+}
+
+/* Statistics Cards */
+.stats-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.stats-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.stats-card .card-body {
+    padding: 1.5rem;
+}
+
+.stats-card .text-xs {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+}
+
+.stats-card .h5 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0;
+}
+
+.stats-card .fa-2x {
+    font-size: 2.5em;
+    opacity: 0.3;
+}
+
+/* Border Colors for Stats Cards */
+.border-left-primary {
+    border-left: 0.25rem solid #4e73df !important;
+}
+
+.border-left-success {
+    border-left: 0.25rem solid #1cc88a !important;
+}
+
+.border-left-warning {
+    border-left: 0.25rem solid #f6c23e !important;
+}
+
+.border-left-danger {
+    border-left: 0.25rem solid #e74a3b !important;
+}
+
+/* ==========================================================================
+   Charts
+   ========================================================================== */
+
+.chart-area {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+.chart-pie {
+    position: relative;
+    height: 250px;
+    width: 100%;
+}
+
+.chart-container {
+    background: #fff;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+
+/* ==========================================================================
+   Email Queue Table
+   ========================================================================== */
+
+.email-queue-table {
+    background: #fff;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+
+.email-queue-table .table {
+    margin-bottom: 0;
+}
+
+.email-queue-table .table th {
+    background-color: #f8f9fc;
+    border-top: none;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #5a5c69;
+    padding: 1rem 0.75rem;
+}
+
+.email-queue-table .table td {
+    padding: 0.75rem;
+    vertical-align: middle;
+    border-top: 1px solid #e3e6f0;
+    font-size: 0.85rem;
+}
+
+.email-queue-table .table tbody tr:hover {
+    background-color: #f8f9fc;
+}
+
+/* Status Badges */
+.badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.375rem;
+}
+
+.badge-warning {
+    background-color: #f6c23e;
+    color: #fff;
+}
+
+.badge-info {
+    background-color: #36b9cc;
+    color: #fff;
+}
+
+.badge-success {
+    background-color: #1cc88a;
+    color: #fff;
+}
+
+.badge-danger {
+    background-color: #e74a3b;
+    color: #fff;
+}
+
+.badge-secondary {
+    background-color: #858796;
+    color: #fff;
+}
+
+.badge-dark {
+    background-color: #5a5c69;
+    color: #fff;
+}
+
+.badge-light {
+    background-color: #f8f9fc;
+    color: #5a5c69;
+    border: 1px solid #e3e6f0;
+}
+
+/* Priority Badges */
+.priority-urgent {
+    background-color: #e74a3b;
+    color: #fff;
+    animation: pulse 2s infinite;
+}
+
+.priority-high {
+    background-color: #f6c23e;
+    color: #fff;
+}
+
+.priority-normal {
+    background-color: #36b9cc;
+    color: #fff;
+}
+
+.priority-low {
+    background-color: #858796;
+    color: #fff;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(231, 74, 59, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(231, 74, 59, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(231, 74, 59, 0);
+    }
+}
+
+/* ==========================================================================
+   Action Buttons
+   ========================================================================== */
+
+.btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    border-radius: 0.25rem;
+}
+
+.btn-outline-info:hover {
+    background-color: #36b9cc;
+    border-color: #36b9cc;
+}
+
+.btn-outline-warning:hover {
+    background-color: #f6c23e;
+    border-color: #f6c23e;
+}
+
+.btn-outline-danger:hover {
+    background-color: #e74a3b;
+    border-color: #e74a3b;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.25rem;
+    justify-content: center;
+}
+
+.action-buttons .btn {
+    min-width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ==========================================================================
+   Filters Section
+   ========================================================================== */
+
+.filters-section {
+    background-color: #f8f9fc;
+    border-bottom: 1px solid #e3e6f0;
+    padding: 1.5rem;
+}
+
+.filters-section .form-label {
+    font-weight: 600;
+    color: #5a5c69;
+    margin-bottom: 0.5rem;
+}
+
+.filters-section .form-select,
+.filters-section .form-control {
+    border: 1px solid #d1d3e2;
+    border-radius: 0.375rem;
+    font-size: 0.85rem;
+}
+
+.filters-section .form-select:focus,
+.filters-section .form-control:focus {
+    border-color: #4e73df;
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+
+/* ==========================================================================
+   Recent Activity
+   ========================================================================== */
+
+.recent-activity {
+    background: #fff;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+
+.recent-activity .list-group-item {
+    border: none;
+    border-bottom: 1px solid #e3e6f0;
+    padding: 1rem;
+}
+
+.recent-activity .list-group-item:last-child {
+    border-bottom: none;
+}
+
+.recent-activity .list-group-item:hover {
+    background-color: #f8f9fc;
+}
+
+.recent-activity h6 {
+    font-weight: 600;
+    color: #5a5c69;
+    margin-bottom: 0.25rem;
+}
+
+.recent-activity .text-muted {
+    color: #858796 !important;
+    font-size: 0.85rem;
+}
+
+/* ==========================================================================
+   Modals
+   ========================================================================== */
+
+.modal-content {
+    border: none;
+    border-radius: 0.5rem;
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+}
+
+.modal-header {
+    background-color: #f8f9fc;
+    border-bottom: 1px solid #e3e6f0;
+    border-radius: 0.5rem 0.5rem 0 0;
+    padding: 1.5rem;
+}
+
+.modal-title {
+    font-weight: 600;
+    color: #5a5c69;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    background-color: #f8f9fc;
+    border-top: 1px solid #e3e6f0;
+    border-radius: 0 0 0.5rem 0.5rem;
+    padding: 1rem 1.5rem;
+}
+
+/* Email Details Modal */
+.email-details {
+    font-size: 0.9rem;
+}
+
+.email-details .detail-row {
+    display: flex;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #e3e6f0;
+}
+
+.email-details .detail-row:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.email-details .detail-label {
+    font-weight: 600;
+    color: #5a5c69;
+    min-width: 120px;
+    margin-right: 1rem;
+}
+
+.email-details .detail-value {
+    flex: 1;
+    color: #858796;
+}
+
+.email-details .email-content {
+    background-color: #f8f9fc;
+    border: 1px solid #e3e6f0;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* ==========================================================================
+   Loading States
+   ========================================================================== */
+
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.loading-spinner {
+    width: 2rem;
+    height: 2rem;
+    border: 0.25em solid #e3e6f0;
+    border-top: 0.25em solid #4e73df;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.table-loading {
+    text-align: center;
+    padding: 2rem;
+    color: #858796;
+}
+
+/* ==========================================================================
+   Bulk Operations
+   ========================================================================== */
+
+.bulk-actions {
+    background-color: #f8f9fc;
+    border: 1px solid #e3e6f0;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    display: none;
+}
+
+.bulk-actions.show {
+    display: block;
+}
+
+.bulk-actions .selected-count {
+    font-weight: 600;
+    color: #4e73df;
+}
+
+.bulk-actions .btn-group .btn {
+    margin-right: 0.5rem;
+}
+
+/* ==========================================================================
+   Responsive Design
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    .stats-card {
+        margin-bottom: 1rem;
+    }
+    
+    .chart-area,
+    .chart-pie {
+        height: 200px;
+    }
+    
+    .email-queue-table .table {
+        font-size: 0.75rem;
+    }
+    
+    .email-queue-table .table th,
+    .email-queue-table .table td {
+        padding: 0.5rem 0.25rem;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        gap: 0.125rem;
+    }
+    
+    .action-buttons .btn {
+        min-width: 28px;
+        height: 28px;
+        font-size: 0.7rem;
+    }
+    
+    .filters-section {
+        padding: 1rem;
+    }
+    
+    .modal-body {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .email-queue-table {
+        overflow-x: auto;
+    }
+    
+    .stats-card .h5 {
+        font-size: 1.25rem;
+    }
+    
+    .stats-card .fa-2x {
+        font-size: 2em;
+    }
+}
+
+/* ==========================================================================
+   Dark Mode Support
+   ========================================================================== */
+
+@media (prefers-color-scheme: dark) {
+    .email-queue-dashboard {
+        background-color: #1a1a1a;
+        color: #e0e0e0;
+    }
+    
+    .stats-card,
+    .email-queue-table,
+    .recent-activity {
+        background-color: #2d2d2d;
+        border-color: #404040;
+    }
+    
+    .stats-card .card-body,
+    .email-queue-table .table th {
+        background-color: #2d2d2d;
+        color: #e0e0e0;
+    }
+    
+    .email-queue-table .table td {
+        border-color: #404040;
+        color: #e0e0e0;
+    }
+    
+    .email-queue-table .table tbody tr:hover {
+        background-color: #3a3a3a;
+    }
+    
+    .filters-section {
+        background-color: #2d2d2d;
+        border-color: #404040;
+    }
+    
+    .form-control,
+    .form-select {
+        background-color: #3a3a3a;
+        border-color: #404040;
+        color: #e0e0e0;
+    }
+    
+    .modal-content {
+        background-color: #2d2d2d;
+        color: #e0e0e0;
+    }
+    
+    .modal-header,
+    .modal-footer {
+        background-color: #3a3a3a;
+        border-color: #404040;
+    }
+}
+
+/* ==========================================================================
+   Print Styles
+   ========================================================================== */
+
+@media print {
+    .btn,
+    .action-buttons,
+    .filters-section,
+    .modal {
+        display: none !important;
+    }
+    
+    .email-queue-table {
+        box-shadow: none;
+    }
+    
+    .stats-card {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+    
+    .chart-area,
+    .chart-pie {
+        display: none;
+    }
+}

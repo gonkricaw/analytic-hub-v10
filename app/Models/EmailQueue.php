@@ -260,6 +260,7 @@ class EmailQueue extends Model
      * Status constants
      */
     const STATUS_PENDING = 'pending';
+    const STATUS_QUEUED = 'queued';
     const STATUS_PROCESSING = 'processing';
     const STATUS_SENT = 'sent';
     const STATUS_FAILED = 'failed';
@@ -278,6 +279,14 @@ class EmailQueue extends Model
     public function isPending(): bool
     {
         return $this->status === self::STATUS_PENDING;
+    }
+
+    /**
+     * Check if email is queued
+     */
+    public function isQueued(): bool
+    {
+        return $this->status === self::STATUS_QUEUED;
     }
 
     /**

@@ -48,6 +48,34 @@ class Kernel extends ConsoleKernel
                  ->runInBackground()
                  ->appendOutputTo(storage_path('logs/cleanup.log'));
         
+        // Email queue processing - runs every minute
+        $schedule->command('email:process-queue')
+                 ->everyMinute()
+                 ->withoutOverlapping()
+                 ->runInBackground()
+                 ->appendOutputTo(storage_path('logs/email-queue.log'));
+        
+        // Email queue monitoring - runs every 5 minutes
+        $schedule->command('email:monitor --alerts')
+                 ->everyFiveMinutes()
+                 ->withoutOverlapping()
+                 ->runInBackground()
+                 ->appendOutputTo(storage_path('logs/email-monitor.log'));
+        
+        // Email queue cleanup - runs daily at 3 AM
+        $schedule->command('email:monitor --cleanup --days=30')
+                 ->dailyAt('03:00')
+                 ->withoutOverlapping()
+                 ->runInBackground()
+                 ->appendOutputTo(storage_path('logs/email-cleanup.log'));
+        
+        // Retry failed emails - runs every 30 minutes
+        $schedule->command('email:process-queue --retry-failed --limit=100')
+                 ->everyThirtyMinutes()
+                 ->withoutOverlapping()
+                 ->runInBackground()
+                 ->appendOutputTo(storage_path('logs/email-retry.log'));
+        
         // Clean up expired password reset tokens - runs daily at 3 AM
         $schedule->command('auth:clear-resets')
                  ->dailyAt('03:00')
