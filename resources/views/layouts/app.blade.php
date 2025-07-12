@@ -35,29 +35,152 @@
     <meta http-equiv="X-Frame-Options" content="DENY">
     <meta http-equiv="X-XSS-Protection" content="1; mode=block">
     
+    <!-- Custom Theme Styles -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
     <style>
-        :root {
-            --primary-color: #667eea;
-            --secondary-color: #764ba2;
-            --accent-color: #FF7A00;
-            --dark-bg: #1a1a3a;
-            --darker-bg: #0f0f2a;
-            --sidebar-width: 280px;
-            --header-height: 70px;
+        /* Additional layout-specific styles */
+        .app-wrapper {
+            display: flex;
+            min-height: 100vh;
+            background: var(--primary-bg);
         }
         
-        * {
+        /* Navigation Bar Styles */
+        .navbar {
+            background: var(--secondary-bg);
+            border-bottom: 1px solid var(--border-color);
+            height: var(--header-height);
+            position: sticky;
+            top: 0;
+            z-index: var(--z-sticky);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .navbar-brand {
+            color: var(--text-primary) !important;
+            font-weight: 600;
+            font-size: 1.25rem;
+            text-decoration: none;
+            transition: color var(--transition-fast);
+        }
+        
+        .navbar-brand:hover {
+            color: var(--primary-color) !important;
+        }
+        
+        .navbar-nav .nav-link {
+            color: var(--text-secondary) !important;
+            font-weight: 500;
+            padding: 0.75rem 1rem !important;
+            border-radius: var(--border-radius);
+            transition: all var(--transition-fast);
+            margin: 0 0.25rem;
+        }
+        
+        .navbar-nav .nav-link:hover {
+            color: var(--text-primary) !important;
+            background: var(--hover-bg);
+        }
+        
+        .navbar-nav .nav-link.active {
+            color: var(--primary-color) !important;
+            background: var(--active-bg);
+        }
+        
+        .navbar-toggler {
+            border: 1px solid var(--border-color);
+            padding: 0.5rem;
+        }
+        
+        .navbar-toggler:focus {
+            box-shadow: 0 0 0 0.2rem rgba(255, 122, 0, 0.25);
+        }
+        
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.75%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+        
+        /* Dropdown Menus */
+        .dropdown-menu {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            margin-top: 0.5rem;
+        }
+        
+        .dropdown-item {
+            color: var(--text-secondary);
+            padding: 0.75rem 1rem;
+            transition: all var(--transition-fast);
+        }
+        
+        .dropdown-item:hover {
+            background: var(--hover-bg);
+            color: var(--text-primary);
+        }
+        
+        .dropdown-divider {
+            border-color: var(--border-color);
+        }
+        
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            background: var(--primary-bg);
+            min-height: calc(100vh - var(--header-height));
+        }
+        
+        /* Page Header */
+        .page-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .page-title {
+            color: var(--text-primary);
+            font-size: 2rem;
+            font-weight: 600;
             margin: 0;
-            padding: 0;
-            box-sizing: border-box;
         }
         
-        body {
-            font-family: 'Figtree', sans-serif;
-            background: var(--dark-bg);
-            color: #ffffff;
-            line-height: 1.6;
-            overflow-x: hidden;
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-top: 0.5rem;
+        }
+        
+        /* Breadcrumb */
+        .breadcrumb {
+            background: transparent;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .breadcrumb-item {
+            color: var(--text-secondary);
+        }
+        
+        .breadcrumb-item.active {
+            color: var(--text-primary);
+        }
+        
+        .breadcrumb-item + .breadcrumb-item::before {
+            color: var(--text-muted);
+            content: "/";
+        }
+        
+        .breadcrumb-item a {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: color var(--transition-fast);
+        }
+        
+        .breadcrumb-item a:hover {
+            color: var(--text-primary);
         }
         
         /* Loading Spinner */
@@ -598,6 +721,111 @@
     </div>
     
     <div class="app-wrapper">
+        <!-- Navigation Bar -->
+        <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+            <div class="container-fluid">
+                <!-- Brand -->
+                <a class="navbar-brand" href="{{ route('dashboard') }}">
+                    <i class="fas fa-chart-line me-2"></i>
+                    {{ config('app.name', 'Analytics Hub') }}
+                </a>
+
+                <!-- Mobile Toggle Button -->
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Navigation Links -->
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
+                                <i class="fas fa-tachometer-alt me-1"></i>
+                                Dashboard
+                            </a>
+                        </li>
+                        @can('view_analytics')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('analytics.*') ? 'active' : '' }}" href="{{ route('analytics.index') }}">
+                                <i class="fas fa-chart-bar me-1"></i>
+                                Analytics
+                            </a>
+                        </li>
+                        @endcan
+                        @can('manage_users')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}">
+                                <i class="fas fa-users me-1"></i>
+                                Users
+                            </a>
+                        </li>
+                        @endcan
+                        @can('manage_content')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('content.*') ? 'active' : '' }}" href="{{ route('content.index') }}">
+                                <i class="fas fa-file-alt me-1"></i>
+                                Content
+                            </a>
+                        </li>
+                        @endcan
+                        @can('manage_system')
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('system.*') ? 'active' : '' }}" href="{{ route('system.index') }}">
+                                <i class="fas fa-cogs me-1"></i>
+                                System
+                            </a>
+                        </li>
+                        @endcan
+                    </ul>
+
+                    <!-- Right Side Navigation -->
+                    <ul class="navbar-nav">
+                        <!-- Notifications -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="notificationsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-bell"></i>
+                                <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle" id="notification-count">0</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationsDropdown">
+                                <li><h6 class="dropdown-header">Notifications</h6></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#">No new notifications</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-center" href="{{ route('notifications.index') }}">View All</a></li>
+                            </ul>
+                        </li>
+
+                        <!-- User Menu -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <img src="{{ Auth::user()->avatar ?? asset('images/default-avatar.png') }}" alt="User Avatar" class="rounded-circle me-1" width="24" height="24">
+                                {{ Auth::user()->name }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <li><h6 class="dropdown-header">{{ Auth::user()->email }}</h6></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ route('profile.show') }}">
+                                    <i class="fas fa-user me-2"></i>Profile
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ route('profile.edit') }}">
+                                    <i class="fas fa-cog me-2"></i>Settings
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="dropdown-item">
+                                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        
         <!-- Sidebar -->
         <nav class="sidebar" id="sidebar">
             <div class="sidebar-header">
@@ -666,82 +894,85 @@
         </nav>
         
         <!-- Main Content -->
-        <div class="main-content" id="mainContent">
-            <!-- Header -->
-            <header class="main-header">
-                <div class="header-left">
-                    <button type="button" class="sidebar-toggle" id="sidebarToggle">
-                        <i class="fas fa-bars"></i>
-                    </button>
-                    
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb">
-                            @if(isset($breadcrumbs) && $breadcrumbs->isNotEmpty())
-                                @foreach($breadcrumbs as $breadcrumb)
-                                    @if($loop->last)
-                                        <li class="breadcrumb-item active" aria-current="page">
-                                            {{ $breadcrumb['title'] }}
-                                        </li>
-                                    @else
-                                        <li class="breadcrumb-item">
-                                            <a href="{{ $breadcrumb['url'] ?: '#' }}">{{ $breadcrumb['title'] }}</a>
-                                        </li>
-                                    @endif
-                                @endforeach
-                            @else
-                                <!-- Fallback breadcrumb -->
-                                <li class="breadcrumb-item">
-                                    <a href="{{ route('dashboard') }}">Dashboard</a>
-                                </li>
-                                @yield('breadcrumb')
-                            @endif
-                        </ol>
-                    </nav>
+        <main class="main-content" style="margin-top: var(--header-height);">
+            <!-- Page Header -->
+            @hasSection('title')
+            <div class="page-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="page-title">@yield('title', 'Dashboard')</h1>
+                        @hasSection('subtitle')
+                        <p class="page-subtitle">@yield('subtitle')</p>
+                        @endif
+                    </div>
+                    @hasSection('page-actions')
+                    <div class="page-actions">
+                        @yield('page-actions')
+                    </div>
+                    @endif
                 </div>
                 
-                <div class="header-right">
-                    <!-- Notifications -->
-                    @include('components.notification-bell')
-                    
-                    <!-- User Menu -->
-                    <div class="dropdown user-menu">
-                        <div class="user-avatar" data-bs-toggle="dropdown" aria-expanded="false">
-                            {{ substr(auth()->user()->first_name, 0, 1) }}{{ substr(auth()->user()->last_name, 0, 1) }}
-                        </div>
-                        <ul class="dropdown-menu dropdown-menu-end bg-dark">
-                            <li>
-                                <div class="dropdown-header text-light">
-                                    <strong>{{ auth()->user()->getFullNameAttribute() }}</strong>
-                                    <br>
-                                    <small class="text-muted">{{ auth()->user()->email }}</small>
-                                </div>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-light" href="#">
-                                <i class="fas fa-user me-2"></i>Profile
-                            </a></li>
-                            <li><a class="dropdown-item text-light" href="#">
-                                <i class="fas fa-cog me-2"></i>Settings
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <form action="{{ route('logout') }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="dropdown-item text-light">
-                                        <i class="fas fa-sign-out-alt me-2"></i>Logout
-                                    </button>
-                                </form>
-                            </li>
-                        </ul>
-                    </div>
+                @hasSection('breadcrumb')
+                <nav aria-label="breadcrumb" class="mt-3">
+                    <ol class="breadcrumb">
+                        @yield('breadcrumb')
+                    </ol>
+                </nav>
+                @endif
+            </div>
+            @endif
+
+            <!-- Flash Messages -->
+            @if(session('success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
-            </header>
-            
-            <!-- Content -->
-            <main class="content-wrapper" role="main">
+            @endif
+
+            @if(session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
+            @if(session('warning'))
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    {{ session('warning') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
+            @if(session('info'))
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    {{ session('info') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
+            @if($errors->any())
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <strong>Please fix the following errors:</strong>
+                    <ul class="mb-0 mt-2">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
+            <!-- Page Content -->
+            <div class="page-content">
                 @yield('content')
-            </main>
-        </div>
+            </div>
+        </main>
     </div>
     
     <!-- Skip Link for Accessibility -->

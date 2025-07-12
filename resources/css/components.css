@@ -1,0 +1,641 @@
+/**
+ * UI Components CSS
+ * Reusable component styles for buttons, forms, cards, and other UI elements
+ */
+
+/* ==========================================================================
+   BUTTONS
+   ========================================================================== */
+
+/* Base Button Styles */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.5;
+    text-align: center;
+    text-decoration: none;
+    vertical-align: middle;
+    cursor: pointer;
+    user-select: none;
+    border: 1px solid transparent;
+    border-radius: var(--border-radius);
+    transition: all var(--transition-fast);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn:focus {
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(255, 122, 0, 0.25);
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Button Variants */
+.btn-primary {
+    color: var(--text-primary);
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-secondary {
+    color: var(--text-primary);
+    background: var(--secondary-bg);
+    border-color: var(--border-color);
+}
+
+.btn-secondary:hover {
+    background: var(--hover-bg);
+    border-color: var(--primary-color);
+}
+
+.btn-success {
+    color: white;
+    background: var(--success-color);
+    border-color: var(--success-color);
+}
+
+.btn-success:hover {
+    background: var(--success-hover);
+    border-color: var(--success-hover);
+    transform: translateY(-1px);
+}
+
+.btn-danger {
+    color: white;
+    background: var(--danger-color);
+    border-color: var(--danger-color);
+}
+
+.btn-danger:hover {
+    background: var(--danger-hover);
+    border-color: var(--danger-hover);
+    transform: translateY(-1px);
+}
+
+.btn-warning {
+    color: var(--text-primary);
+    background: var(--warning-color);
+    border-color: var(--warning-color);
+}
+
+.btn-warning:hover {
+    background: var(--warning-hover);
+    border-color: var(--warning-hover);
+    transform: translateY(-1px);
+}
+
+.btn-info {
+    color: white;
+    background: var(--info-color);
+    border-color: var(--info-color);
+}
+
+.btn-info:hover {
+    background: var(--info-hover);
+    border-color: var(--info-hover);
+    transform: translateY(-1px);
+}
+
+/* Outline Button Variants */
+.btn-outline-primary {
+    color: var(--primary-color);
+    background: transparent;
+    border-color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+    color: var(--text-primary);
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-outline-secondary {
+    color: var(--text-secondary);
+    background: transparent;
+    border-color: var(--border-color);
+}
+
+.btn-outline-secondary:hover {
+    color: var(--text-primary);
+    background: var(--secondary-bg);
+    border-color: var(--primary-color);
+}
+
+/* Button Sizes */
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+}
+
+.btn-lg {
+    padding: 1rem 2rem;
+    font-size: 1rem;
+}
+
+.btn-xl {
+    padding: 1.25rem 2.5rem;
+    font-size: 1.125rem;
+}
+
+/* Button Groups */
+.btn-group {
+    display: inline-flex;
+    vertical-align: middle;
+}
+
+.btn-group .btn {
+    position: relative;
+    flex: 1 1 auto;
+}
+
+.btn-group .btn:not(:first-child) {
+    margin-left: -1px;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.btn-group .btn:not(:last-child) {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.btn-group .btn:hover {
+    z-index: 1;
+}
+
+/* ==========================================================================
+   FORMS
+   ========================================================================== */
+
+/* Form Controls */
+.form-control {
+    display: block;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--text-primary);
+    background: var(--secondary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    transition: all var(--transition-fast);
+}
+
+.form-control:focus {
+    color: var(--text-primary);
+    background: var(--secondary-bg);
+    border-color: var(--primary-color);
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(255, 122, 0, 0.25);
+}
+
+.form-control::placeholder {
+    color: var(--text-muted);
+    opacity: 1;
+}
+
+.form-control:disabled {
+    background: var(--disabled-bg);
+    opacity: 1;
+    cursor: not-allowed;
+}
+
+/* Form Control Sizes */
+.form-control-sm {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+}
+
+.form-control-lg {
+    padding: 1rem 1.25rem;
+    font-size: 1rem;
+}
+
+/* Form Labels */
+.form-label {
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.form-label.required::after {
+    content: ' *';
+    color: var(--danger-color);
+}
+
+/* Form Text */
+.form-text {
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* Form Groups */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+/* Input Groups */
+.input-group {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    width: 100%;
+}
+
+.input-group .form-control {
+    position: relative;
+    flex: 1 1 auto;
+    width: 1%;
+    min-width: 0;
+}
+
+.input-group-text {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    text-align: center;
+    white-space: nowrap;
+    background: var(--secondary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+}
+
+.input-group .form-control:not(:first-child) {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.input-group .form-control:not(:last-child) {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.input-group .input-group-text:not(:first-child) {
+    border-left: 0;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.input-group .input-group-text:not(:last-child) {
+    border-right: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+/* Form Validation */
+.is-valid {
+    border-color: var(--success-color) !important;
+}
+
+.is-valid:focus {
+    border-color: var(--success-color) !important;
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25) !important;
+}
+
+.is-invalid {
+    border-color: var(--danger-color) !important;
+}
+
+.is-invalid:focus {
+    border-color: var(--danger-color) !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+}
+
+.valid-feedback {
+    display: block;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--success-color);
+}
+
+.invalid-feedback {
+    display: block;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--danger-color);
+}
+
+/* ==========================================================================
+   CARDS
+   ========================================================================== */
+
+.card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    word-wrap: break-word;
+    background: var(--secondary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-fast);
+}
+
+.card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.card-header {
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 0;
+    background: var(--primary-bg);
+    border-bottom: 1px solid var(--border-color);
+    border-top-left-radius: var(--border-radius);
+    border-top-right-radius: var(--border-radius);
+}
+
+.card-body {
+    flex: 1 1 auto;
+    padding: 1.5rem;
+}
+
+.card-footer {
+    padding: 1.25rem 1.5rem;
+    background: var(--primary-bg);
+    border-top: 1px solid var(--border-color);
+    border-bottom-left-radius: var(--border-radius);
+    border-bottom-right-radius: var(--border-radius);
+}
+
+.card-title {
+    margin-bottom: 0.75rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.card-subtitle {
+    margin-top: -0.375rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.card-text {
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* ==========================================================================
+   TABLES
+   ========================================================================== */
+
+.table {
+    width: 100%;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+    vertical-align: top;
+    border-color: var(--border-color);
+}
+
+.table th,
+.table td {
+    padding: 0.75rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.table thead th {
+    vertical-align: bottom;
+    border-bottom: 2px solid var(--border-color);
+    background: var(--secondary-bg);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.table tbody tr:hover {
+    background: var(--hover-bg);
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background: var(--stripe-bg);
+}
+
+.table-bordered {
+    border: 1px solid var(--border-color);
+}
+
+.table-bordered th,
+.table-bordered td {
+    border: 1px solid var(--border-color);
+}
+
+/* ==========================================================================
+   ALERTS
+   ========================================================================== */
+
+.alert {
+    position: relative;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    border: 1px solid transparent;
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+}
+
+.alert-dismissible {
+    padding-right: 3rem;
+}
+
+.alert-dismissible .btn-close {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 2;
+    padding: 1.25rem 1.25rem;
+}
+
+.alert-primary {
+    color: var(--text-primary);
+    background: rgba(255, 122, 0, 0.1);
+    border-color: rgba(255, 122, 0, 0.2);
+}
+
+.alert-success {
+    color: var(--success-color);
+    background: rgba(40, 167, 69, 0.1);
+    border-color: rgba(40, 167, 69, 0.2);
+}
+
+.alert-danger {
+    color: var(--danger-color);
+    background: rgba(220, 53, 69, 0.1);
+    border-color: rgba(220, 53, 69, 0.2);
+}
+
+.alert-warning {
+    color: var(--warning-color);
+    background: rgba(255, 193, 7, 0.1);
+    border-color: rgba(255, 193, 7, 0.2);
+}
+
+.alert-info {
+    color: var(--info-color);
+    background: rgba(23, 162, 184, 0.1);
+    border-color: rgba(23, 162, 184, 0.2);
+}
+
+/* ==========================================================================
+   BADGES
+   ========================================================================== */
+
+.badge {
+    display: inline-block;
+    padding: 0.35em 0.65em;
+    font-size: 0.75em;
+    font-weight: 600;
+    line-height: 1;
+    color: white;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: var(--border-radius-sm);
+}
+
+.badge-primary {
+    background: var(--primary-color);
+}
+
+.badge-secondary {
+    background: var(--text-muted);
+}
+
+.badge-success {
+    background: var(--success-color);
+}
+
+.badge-danger {
+    background: var(--danger-color);
+}
+
+.badge-warning {
+    background: var(--warning-color);
+    color: var(--text-primary);
+}
+
+.badge-info {
+    background: var(--info-color);
+}
+
+/* ==========================================================================
+   RESPONSIVE UTILITIES
+   ========================================================================== */
+
+/* Mobile First Responsive Design */
+@media (max-width: 575.98px) {
+    .btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.75rem;
+    }
+    
+    .btn-lg {
+        padding: 0.75rem 1.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .form-control {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .card-header,
+    .card-footer {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .btn-group {
+        flex-direction: column;
+    }
+    
+    .btn-group .btn {
+        margin-left: 0;
+        margin-top: -1px;
+    }
+    
+    .btn-group .btn:not(:first-child) {
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+        border-bottom-left-radius: var(--border-radius);
+        border-bottom-right-radius: var(--border-radius);
+    }
+    
+    .btn-group .btn:not(:last-child) {
+        border-top-left-radius: var(--border-radius);
+        border-top-right-radius: var(--border-radius);
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+}
+
+/* ==========================================================================
+   ACCESSIBILITY
+   ========================================================================== */
+
+/* Focus indicators */
+.btn:focus-visible,
+.form-control:focus-visible,
+.form-select:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .btn,
+    .form-control,
+    .card {
+        transition: none;
+    }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    .btn {
+        border-width: 2px;
+    }
+    
+    .form-control {
+        border-width: 2px;
+    }
+    
+    .card {
+        border-width: 2px;
+    }
+}
