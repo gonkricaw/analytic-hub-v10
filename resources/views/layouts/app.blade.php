@@ -432,6 +432,145 @@
             outline-offset: 2px;
         }
         
+        /* Notification Bell Styles */
+        .notification-bell {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .notification-bell-btn {
+            background: none;
+            border: none;
+            color: #ccc;
+            font-size: 1.25rem;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .notification-bell-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            font-size: 0.75rem;
+            min-width: 1.25rem;
+            height: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: translate(25%, -25%);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: translate(25%, -25%) scale(1); }
+            50% { transform: translate(25%, -25%) scale(1.1); }
+            100% { transform: translate(25%, -25%) scale(1); }
+        }
+        
+        .notification-dropdown {
+            width: 350px;
+            max-height: 400px;
+            overflow-y: auto;
+            background: var(--darker-bg);
+            border: 1px solid #333;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+        
+        .notification-dropdown-header {
+            padding: 1rem;
+            border-bottom: 1px solid #333;
+            background: var(--dark-bg);
+            border-radius: 0.5rem 0.5rem 0 0;
+        }
+        
+        .notification-dropdown-body {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .notification-bell-item {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #333;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .notification-bell-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .notification-bell-item.unread {
+            background: rgba(255, 122, 0, 0.1);
+            border-left: 3px solid var(--accent-color);
+        }
+        
+        .notification-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.875rem;
+        }
+        
+        .notification-content {
+            flex: 1;
+        }
+        
+        .notification-title {
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+            color: white;
+        }
+        
+        .notification-message {
+            font-size: 0.8rem;
+            color: #ccc;
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+        
+        .notification-time {
+            font-size: 0.75rem;
+            color: #888;
+        }
+        
+        .notification-actions {
+            display: flex;
+            gap: 0.25rem;
+        }
+        
+        .notification-empty {
+            padding: 2rem;
+            text-align: center;
+            color: #888;
+        }
+        
+        .notification-empty i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        
+        .mark-read-btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+        
         /* Print Styles */
         @media print {
             .sidebar,
@@ -562,18 +701,7 @@
                 
                 <div class="header-right">
                     <!-- Notifications -->
-                    <div class="dropdown">
-                        <button class="btn btn-link text-light" type="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-bell"></i>
-                            <span class="badge bg-danger">3</span>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end bg-dark">
-                            <li><h6 class="dropdown-header text-light">Notifications</h6></li>
-                            <li><a class="dropdown-item text-light" href="#">New user registered</a></li>
-                            <li><a class="dropdown-item text-light" href="#">System update available</a></li>
-                            <li><a class="dropdown-item text-light" href="#">Security alert</a></li>
-                        </ul>
-                    </div>
+                    @include('components.notification-bell')
                     
                     <!-- User Menu -->
                     <div class="dropdown user-menu">

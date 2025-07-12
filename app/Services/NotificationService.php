@@ -2,16 +2,17 @@
 
 namespace App\Services;
 
+use App\Events\NotificationSent;
 use App\Models\Notification;
-use App\Models\UserNotification;
 use App\Models\User;
+use App\Models\UserNotification;
 use App\Models\Role;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * NotificationService
@@ -333,6 +334,22 @@ class NotificationService
 
         if (!empty($records)) {
             UserNotification::insert($records);
+            
+            // Fire broadcast event for real-time notifications
+            // Only broadcast if notification should be sent immediately
+            if ($notification->status === 'sent' || ($notification->scheduled_at && $notification->scheduled_at->isPast())) {
+                foreach ($users as $user) {
+                    try {
+                        event(new NotificationSent($notification, $user));
+                    } catch (Exception $e) {
+                        Log::warning('Failed to broadcast notification', [
+                            'notification_id' => $notification->id,
+                            'user_id' => $user->id,
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+                }
+            }
         }
     }
 
