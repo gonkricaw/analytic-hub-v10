@@ -68,6 +68,15 @@ Route::middleware(['auth.user', 'check.status'])->group(function () {
     Route::put('/profile/password', [ProfileController::class, 'changePassword'])->name('profile.password.change');
     Route::get('/profile/activity', [ProfileController::class, 'getActivityHistory'])->name('profile.activity');
     Route::put('/profile/notifications', [ProfileController::class, 'updateNotificationPreferences'])->name('profile.notifications.update');
+    
+    // User notification routes
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\NotificationController::class, 'getUserNotifications'])->name('user.index');
+        Route::post('/{notification}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('user.read');
+        Route::post('/mark-all-read', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('user.mark-all-read');
+        Route::post('/{notification}/dismiss', [\App\Http\Controllers\NotificationController::class, 'dismiss'])->name('user.dismiss');
+        Route::get('/stats', [\App\Http\Controllers\NotificationController::class, 'getUserStats'])->name('user.stats');
+    });
 });
 
 // Admin routes (requires admin role)
@@ -218,6 +227,19 @@ Route::middleware(['auth.user', 'check.status', 'role:admin,super_admin'])->pref
         Route::post('/cancel', [\App\Http\Controllers\Admin\EmailQueueController::class, 'cancel'])->name('cancel');
         Route::post('/cleanup', [\App\Http\Controllers\Admin\EmailQueueController::class, 'cleanup'])->name('cleanup');
         Route::post('/send-bulk', [\App\Http\Controllers\Admin\EmailQueueController::class, 'sendBulk'])->name('send-bulk');
+    });
+    
+    // Notification management routes
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\NotificationController::class, 'index'])->name('index');
+        Route::get('/data', [\App\Http\Controllers\NotificationController::class, 'data'])->name('data');
+        Route::get('/create', [\App\Http\Controllers\NotificationController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\NotificationController::class, 'store'])->name('store');
+        Route::get('/{notification}', [\App\Http\Controllers\NotificationController::class, 'show'])->name('show');
+        Route::get('/{notification}/edit', [\App\Http\Controllers\NotificationController::class, 'edit'])->name('edit');
+        Route::put('/{notification}', [\App\Http\Controllers\NotificationController::class, 'update'])->name('update');
+        Route::delete('/{notification}', [\App\Http\Controllers\NotificationController::class, 'destroy'])->name('destroy');
+        Route::get('/statistics/data', [\App\Http\Controllers\NotificationController::class, 'statistics'])->name('statistics');
     });
     
     // Upload routes for content editor

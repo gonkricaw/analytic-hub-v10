@@ -93,6 +93,20 @@ class Kernel extends ConsoleKernel
                  ->everyFiveMinutes()
                  ->withoutOverlapping()
                  ->runInBackground();
+        
+        // Process scheduled notifications - runs every 5 minutes
+        $schedule->command('notifications:process-scheduled --limit=100')
+                 ->everyFiveMinutes()
+                 ->withoutOverlapping()
+                 ->runInBackground()
+                 ->appendOutputTo(storage_path('logs/notifications-scheduled.log'));
+        
+        // Clean up expired notifications - runs daily at 4 AM
+        $schedule->command('notifications:cleanup-expired --days=30')
+                 ->dailyAt('04:00')
+                 ->withoutOverlapping()
+                 ->runInBackground()
+                 ->appendOutputTo(storage_path('logs/notifications-cleanup.log'));
     }
 
     /**

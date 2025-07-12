@@ -52,4 +52,19 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         // Profile update logic for API
         return response()->json(['message' => 'Profile updated successfully']);
     });
+    
+    // Notification API routes
+    Route::prefix('notifications')->group(function () {
+        Route::get('/', [\App\Http\Controllers\NotificationController::class, 'getUserNotifications']);
+        Route::post('/{notification}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead']);
+        Route::post('/mark-all-read', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead']);
+        Route::post('/{notification}/dismiss', [\App\Http\Controllers\NotificationController::class, 'dismiss']);
+        Route::get('/stats', [\App\Http\Controllers\NotificationController::class, 'getUserStats']);
+        Route::get('/unread-count', function (Request $request) {
+            $count = \App\Models\UserNotification::where('user_id', $request->user()->id)
+                ->where('is_read', false)
+                ->count();
+            return response()->json(['unread_count' => $count]);
+        });
+    });
 });
