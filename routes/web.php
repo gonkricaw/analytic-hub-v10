@@ -148,6 +148,65 @@ Route::middleware(['auth.user', 'check.status', 'role:admin,super_admin'])->pref
     Route::get('contents/data/table', [ContentController::class, 'getData'])->name('contents.data');
     Route::post('contents/bulk-action', [ContentController::class, 'bulkAction'])->name('contents.bulk-action');
     
+    // Content role assignment routes
+    Route::post('contents/{content}/roles/assign', [ContentController::class, 'assignRoles'])->name('contents.assign-roles');
+    Route::delete('contents/{content}/roles/{role}', [ContentController::class, 'removeRole'])->name('contents.remove-role');
+    Route::get('contents/{content}/roles', [ContentController::class, 'getRoles'])->name('contents.get-roles');
+    
+    // Content expiry management routes
+    Route::get('contents/{content}/expiry/status', [ContentController::class, 'getExpiryStatus'])->name('contents.expiry-status');
+    Route::post('contents/{content}/expiry/extend', [ContentController::class, 'extendExpiry'])->name('contents.extend-expiry');
+    Route::post('contents/{content}/expiry/set', [ContentController::class, 'setExpiry'])->name('contents.set-expiry');
+    Route::delete('contents/{content}/expiry', [ContentController::class, 'removeExpiry'])->name('contents.remove-expiry');
+    Route::get('contents/expired', [ContentController::class, 'getExpiredContent'])->name('contents.expired');
+    Route::get('contents/expiring', [ContentController::class, 'getExpiringContent'])->name('contents.expiring');
+    Route::get('contents/expiry/statistics', [ContentController::class, 'getExpiryStatistics'])->name('contents.expiry-statistics');
+    Route::post('contents/expiry/bulk-extend', [ContentController::class, 'bulkExtendExpiry'])->name('contents.bulk-extend-expiry');
+    
+    // Content visit analytics routes
+    Route::get('contents/{content}/analytics/visits', [ContentController::class, 'getVisitAnalytics'])->name('contents.visit-analytics');
+    Route::get('contents/analytics/popular', [ContentController::class, 'getPopularContent'])->name('contents.popular');
+    Route::get('contents/analytics/trending', [ContentController::class, 'getTrendingContent'])->name('contents.trending');
+    Route::get('contents/analytics/realtime', [ContentController::class, 'getRealTimeStats'])->name('contents.realtime-stats');
+    Route::post('contents/{content}/analytics/reading-progress', [ContentController::class, 'trackReadingProgress'])->name('contents.track-reading-progress');
+    Route::get('contents/analytics/summary', [ContentController::class, 'getVisitSummary'])->name('contents.visit-summary');
+    Route::get('contents/analytics/export', [ContentController::class, 'exportVisitAnalytics'])->name('contents.export-analytics');
+    
+    // Popular content analytics dashboard routes
+    Route::prefix('analytics/popular-content')->name('analytics.popular-content.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\PopularContentAnalyticsController::class, 'index'])->name('index');
+        Route::get('/get-popular', [\App\Http\Controllers\Admin\PopularContentAnalyticsController::class, 'getPopularContent'])->name('get-popular');
+        Route::get('/get-trending', [\App\Http\Controllers\Admin\PopularContentAnalyticsController::class, 'getTrendingContent'])->name('get-trending');
+        Route::get('/performance-comparison', [\App\Http\Controllers\Admin\PopularContentAnalyticsController::class, 'getPerformanceComparison'])->name('performance-comparison');
+        Route::get('/engagement-analytics', [\App\Http\Controllers\Admin\PopularContentAnalyticsController::class, 'getEngagementAnalytics'])->name('engagement-analytics');
+        Route::get('/export', [\App\Http\Controllers\Admin\PopularContentAnalyticsController::class, 'exportAnalytics'])->name('export');
+    });
+    
+    // Email template management routes
+    Route::prefix('email-templates')->name('email-templates.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'store'])->name('store');
+        Route::get('/{emailTemplate}', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'show'])->name('show');
+        Route::get('/{emailTemplate}/edit', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'edit'])->name('edit');
+        Route::put('/{emailTemplate}', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'update'])->name('update');
+        Route::delete('/{emailTemplate}', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'destroy'])->name('destroy');
+        
+        // Additional email template routes
+        Route::get('/{emailTemplate}/preview', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'preview'])->name('preview');
+        Route::post('/{emailTemplate}/test', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'sendTest'])->name('test');
+        Route::post('/{emailTemplate}/duplicate', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'duplicate'])->name('duplicate');
+        Route::post('/{emailTemplate}/activate', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'activate'])->name('activate');
+        Route::post('/{emailTemplate}/deactivate', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'deactivate'])->name('deactivate');
+        Route::get('/{emailTemplate}/versions', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'versions'])->name('versions');
+        Route::post('/{emailTemplate}/versions', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'createVersion'])->name('versions.create');
+        Route::post('/{emailTemplate}/versions/{version}/restore', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'restoreVersion'])->name('versions.restore');
+        Route::get('/data/table', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'getData'])->name('data');
+        Route::get('/variables/list', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'getVariables'])->name('variables');
+        Route::post('/export', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'export'])->name('export');
+        Route::post('/import', [\App\Http\Controllers\Admin\EmailTemplateController::class, 'import'])->name('import');
+    });
+    
     // Upload routes for content editor
     Route::post('upload/image', [\App\Http\Controllers\Admin\UploadController::class, 'uploadImage'])->name('upload.image');
     Route::post('upload/file', [\App\Http\Controllers\Admin\UploadController::class, 'uploadFile'])->name('upload.file');

@@ -505,18 +505,110 @@ function initTinyMCE() {
         plugins: [
             'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
             'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-            'insertdatetime', 'media', 'table', 'help', 'wordcount', 'emoticons'
+            'insertdatetime', 'media', 'table', 'help', 'wordcount', 'emoticons',
+            'codesample', 'hr', 'pagebreak', 'nonbreaking', 'template', 'paste',
+            'textpattern', 'directionality', 'visualchars', 'noneditable'
         ],
-        toolbar: 'undo redo | blocks | ' +
-            'bold italic backcolor | alignleft aligncenter ' +
-            'alignright alignjustify | bullist numlist outdent indent | ' +
-            'removeformat | help | link image media | code preview fullscreen',
-        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 14px; }',
+        toolbar: 'undo redo | blocks fontfamily fontsize | ' +
+            'bold italic underline strikethrough | forecolor backcolor | ' +
+            'alignleft aligncenter alignright alignjustify | ' +
+            'bullist numlist outdent indent | table tabledelete | ' +
+            'tableprops tablerowprops tablecellprops | tableinsertrowbefore tableinsertrowafter tabledeleterow | ' +
+            'tableinsertcolbefore tableinsertcolafter tabledeletecol | ' +
+            'link image media codesample | hr pagebreak | ' +
+            'removeformat | code preview fullscreen | help',
+        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; font-size: 14px; line-height: 1.6; } ' +
+            'pre { background-color: #f4f4f4; padding: 10px; border-radius: 4px; overflow-x: auto; } ' +
+            'code { background-color: #f4f4f4; padding: 2px 4px; border-radius: 3px; font-family: Consolas, Monaco, "Courier New", monospace; } ' +
+            'table { border-collapse: collapse; width: 100%; } ' +
+            'table td, table th { border: 1px solid #ddd; padding: 8px; } ' +
+            'table th { background-color: #f2f2f2; font-weight: bold; text-align: left; }',
         image_advtab: true,
         image_uploadtab: true,
-        file_picker_types: 'image',
+        file_picker_types: 'image file media',
         automatic_uploads: true,
         images_upload_url: '/admin/upload/image',
+        file_picker_callback: function(callback, value, meta) {
+            // File picker for documents and media
+            if (meta.filetype === 'file') {
+                const input = document.createElement('input');
+                input.setAttribute('type', 'file');
+                input.setAttribute('accept', '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar');
+                input.onchange = function() {
+                    const file = this.files[0];
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('_token', '{{ csrf_token() }}');
+                    
+                    fetch('/admin/upload/file', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            callback(result.location, {text: file.name});
+                        } else {
+                            alert('File upload failed: ' + result.message);
+                        }
+                    })
+                    .catch(error => {
+                        alert('File upload failed: ' + error.message);
+                    });
+                };
+                input.click();
+            }
+        },
+        // Code syntax highlighting languages
+        codesample_languages: [
+            {text: 'HTML/XML', value: 'markup'},
+            {text: 'JavaScript', value: 'javascript'},
+            {text: 'CSS', value: 'css'},
+            {text: 'PHP', value: 'php'},
+            {text: 'Python', value: 'python'},
+            {text: 'Java', value: 'java'},
+            {text: 'C#', value: 'csharp'},
+            {text: 'C++', value: 'cpp'},
+            {text: 'SQL', value: 'sql'},
+            {text: 'JSON', value: 'json'},
+            {text: 'XML', value: 'xml'},
+            {text: 'Bash', value: 'bash'},
+            {text: 'PowerShell', value: 'powershell'},
+            {text: 'R', value: 'r'},
+            {text: 'MATLAB', value: 'matlab'}
+        ],
+        // Table responsive settings
+        table_responsive_width: true,
+        table_default_attributes: {
+            'class': 'table table-responsive'
+        },
+        table_default_styles: {
+            'border-collapse': 'collapse',
+            'width': '100%'
+        },
+        // Paste settings for better content handling
+        paste_data_images: true,
+        paste_as_text: false,
+        paste_webkit_styles: 'color font-size font-family',
+        paste_retain_style_properties: 'color font-size font-family',
+        // Template settings
+        templates: [
+            {
+                title: 'Basic Article',
+                description: 'Basic article template with header and content',
+                content: '<h2>Article Title</h2><p>Article content goes here...</p>'
+            },
+            {
+                title: 'Two Column Layout',
+                description: 'Two column layout template',
+                content: '<div style="display: flex; gap: 20px;"><div style="flex: 1;"><h3>Left Column</h3><p>Content for left column...</p></div><div style="flex: 1;"><h3>Right Column</h3><p>Content for right column...</p></div></div>'
+            },
+            {
+                title: 'Data Table',
+                description: 'Responsive data table template',
+                content: '<table class="table table-responsive"><thead><tr><th>Header 1</th><th>Header 2</th><th>Header 3</th></tr></thead><tbody><tr><td>Data 1</td><td>Data 2</td><td>Data 3</td></tr></tbody></table>'
+            }
+        ],
         images_upload_handler: function (blobInfo, success, failure) {
             const formData = new FormData();
             formData.append('file', blobInfo.blob(), blobInfo.filename());

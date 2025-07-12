@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use App\Models\Content;
+use App\Models\ContentRole;
 
 /**
  * Class Role
@@ -159,6 +161,90 @@ class Role extends Model
     {
         return $this->belongsToMany(Menu::class, 'idbi_role_menus', 'role_id', 'menu_id')
                     ->withTimestamps();
+    }
+
+    /**
+     * Get content accessible by this role.
+     * 
+     * @return BelongsToMany
+     */
+    public function contents(): BelongsToMany
+    {
+        return $this->belongsToMany(Content::class, 'idbi_content_roles', 'role_id', 'content_id')
+                    ->using(ContentRole::class)
+                    ->withPivot([
+                        'id', 'is_granted', 'access_type', 'access_conditions', 'restrictions',
+                        'can_view', 'can_edit', 'can_delete', 'can_publish', 'can_comment', 'can_share',
+                        'is_visible', 'show_in_listings', 'show_metadata', 'allow_download',
+                        'assignment_reason', 'assignment_data', 'notes', 'priority',
+                        'granted_at', 'expires_at', 'is_temporary', 'duration_hours',
+                        'granted_by', 'revoked_by', 'revoked_at', 'revocation_reason',
+                        'overrides_default', 'overridden_content_id', 'override_justification',
+                        'view_count', 'edit_count', 'last_viewed_at', 'last_edited_at', 'first_accessed_at', 'access_statistics',
+                        'comment_count', 'share_count', 'download_count', 'interaction_data',
+                        'is_active', 'requires_approval', 'approval_status', 'approved_by', 'approved_at',
+                        'is_sensitive', 'requires_justification', 'compliance_notes', 'risk_level', 'audit_access',
+                        'workflow_status', 'reviewer_id', 'reviewed_at', 'review_notes',
+                        'notify_on_update', 'notify_on_comment', 'notify_on_share',
+                        'created_by', 'updated_by'
+                    ])
+                    ->withTimestamps();
+    }
+
+    /**
+     * Get content role assignments for this role.
+     * 
+     * @return HasMany
+     */
+    public function contentRoles(): HasMany
+    {
+        return $this->hasMany(ContentRole::class, 'role_id');
+    }
+
+    /**
+     * Get active content role assignments for this role.
+     * 
+     * @return HasMany
+     */
+    public function activeContentRoles(): HasMany
+    {
+        return $this->hasMany(ContentRole::class, 'role_id')
+                    ->active();
+    }
+
+    /**
+     * Check if this role has access to specific content.
+     * 
+     * @param string $contentId Content ID to check
+     * @param string $permission Specific permission to check (view, edit, etc.)
+     * @return bool
+     */
+    public function hasContentAccess(string $contentId, string $permission = 'view'): bool
+    {
+        $permissionColumn = 'can_' . $permission;
+        
+        return ContentRole::where('role_id', $this->id)
+                         ->where('content_id', $contentId)
+                         ->active()
+                         ->where($permissionColumn, true)
+                         ->exists();
+    }
+
+    /**
+     * Get all content this role can access with specific permission.
+     * 
+     * @param string $permission Permission to check (view, edit, etc.)
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getAccessibleContent(string $permission = 'view')
+    {
+        $permissionColumn = 'can_' . $permission;
+        
+        return Content::whereHas('contentRoles', function ($query) use ($permissionColumn) {
+            $query->where('role_id', $this->id)
+                  ->active()
+                  ->where($permissionColumn, true);
+        })->get();
     }
 
     /**

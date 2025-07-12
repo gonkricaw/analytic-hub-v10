@@ -89,5 +89,8 @@ class Kernel extends HttpKernel
         'password.expiry' => \App\Http\Middleware\CheckPasswordExpiry::class,
         'activity.log' => \App\Http\Middleware\ActivityLogging::class,
         'rate.limit' => \App\Http\Middleware\RateLimiting::class,
+        
+        // Analytics & Tracking Middleware
+        'track.visits' => \App\Http\Middleware\TrackContentVisits::class,
     ];
 }

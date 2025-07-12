@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Contracts\Encryption\DecryptException;
+use App\Models\ContentAccessLog;
 
 /**
  * Class ContentEncryptionService
@@ -406,20 +407,25 @@ class ContentEncryptionService
     public function logContentAccess(string $contentId, string $action = 'view', array $metadata = []): void
     {
         try {
-            $logData = [
+            // Create database log entry
+            ContentAccessLog::createLog(
+                $contentId,
+                $action,
+                auth()->id(),
+                request()->ip(),
+                request()->userAgent(),
+                $metadata
+            );
+
+            // Also log to file for backup
+            Log::info('Content access logged', [
                 'content_id' => $contentId,
                 'action' => $action,
                 'user_id' => auth()->id(),
                 'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent(),
                 'timestamp' => now()->toISOString(),
                 'metadata' => $metadata
-            ];
-
-            Log::info('Content access logged', $logData);
-
-            // Here you could also store in a dedicated content_access_logs table
-            // for more detailed analytics and reporting
+            ]);
 
         } catch (\Exception $e) {
             Log::error('Failed to log content access', [

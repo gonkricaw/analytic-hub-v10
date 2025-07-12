@@ -11,7 +11,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use App\Models\ContentRole;
 
 /**
  * Class Content
@@ -342,7 +345,215 @@ class Content extends Model
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class, 'idbi_content_roles', 'content_id', 'role_id')
+                    ->using(ContentRole::class)
+                    ->withPivot([
+                        'id', 'is_granted', 'access_type', 'access_conditions', 'restrictions',
+                        'can_view', 'can_edit', 'can_delete', 'can_publish', 'can_comment', 'can_share',
+                        'is_visible', 'show_in_listings', 'show_metadata', 'allow_download',
+                        'assignment_reason', 'assignment_data', 'notes', 'priority',
+                        'granted_at', 'expires_at', 'is_temporary', 'duration_hours',
+                        'granted_by', 'revoked_by', 'revoked_at', 'revocation_reason',
+                        'overrides_default', 'overridden_content_id', 'override_justification',
+                        'view_count', 'edit_count', 'last_viewed_at', 'last_edited_at', 'first_accessed_at', 'access_statistics',
+                        'comment_count', 'share_count', 'download_count', 'interaction_data',
+                        'is_active', 'requires_approval', 'approval_status', 'approved_by', 'approved_at',
+                        'is_sensitive', 'requires_justification', 'compliance_notes', 'risk_level', 'audit_access',
+                        'workflow_status', 'reviewer_id', 'reviewed_at', 'review_notes',
+                        'notify_on_update', 'notify_on_comment', 'notify_on_share',
+                        'created_by', 'updated_by'
+                    ])
                     ->withTimestamps();
+    }
+
+    /**
+     * Get content role assignments.
+     * 
+     * @return HasMany
+     */
+    public function contentRoles(): HasMany
+    {
+        return $this->hasMany(ContentRole::class, 'content_id');
+    }
+
+    /**
+     * Get active content role assignments.
+     * 
+     * @return HasMany
+     */
+    public function activeContentRoles(): HasMany
+    {
+        return $this->hasMany(ContentRole::class, 'content_id')
+                    ->active();
+    }
+
+    /**
+     * Assign a role to this content with specific permissions.
+     * 
+     * @param string $roleId Role ID to assign
+     * @param array $permissions Array of permissions and settings
+     * @param string|null $grantedBy User ID who is granting access
+     * @return ContentRole|null
+     */
+    public function assignRole(string $roleId, array $permissions = [], ?string $grantedBy = null): ?ContentRole
+    {
+        try {
+            // Check if assignment already exists
+            $existingAssignment = ContentRole::where('content_id', $this->id)
+                                            ->where('role_id', $roleId)
+                                            ->first();
+
+            if ($existingAssignment) {
+                // Update existing assignment
+                $existingAssignment->update(array_merge([
+                    'is_granted' => true,
+                    'is_active' => true,
+                    'granted_by' => $grantedBy ?? Auth::id(),
+                    'granted_at' => now(),
+                    'revoked_by' => null,
+                    'revoked_at' => null,
+                    'revocation_reason' => null
+                ], $permissions));
+
+                return $existingAssignment;
+            }
+
+            // Create new assignment
+            $defaultPermissions = [
+                'is_granted' => true,
+                'access_type' => ContentRole::ACCESS_VIEW,
+                'can_view' => true,
+                'can_edit' => false,
+                'can_delete' => false,
+                'can_publish' => false,
+                'can_comment' => false,
+                'can_share' => false,
+                'is_visible' => true,
+                'show_in_listings' => true,
+                'show_metadata' => true,
+                'allow_download' => false,
+                'priority' => ContentRole::PRIORITY_NORMAL,
+                'is_active' => true,
+                'granted_by' => $grantedBy ?? Auth::id(),
+                'granted_at' => now(),
+                'risk_level' => ContentRole::RISK_LOW
+            ];
+
+            $assignmentData = array_merge($defaultPermissions, $permissions, [
+                'content_id' => $this->id,
+                'role_id' => $roleId
+            ]);
+
+            return ContentRole::create($assignmentData);
+        } catch (\Exception $e) {
+            Log::error('Failed to assign role to content', [
+                'content_id' => $this->id,
+                'role_id' => $roleId,
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Remove a role assignment from this content.
+     * 
+     * @param string $roleId Role ID to remove
+     * @param string|null $revokedBy User ID who is revoking access
+     * @param string|null $reason Reason for revocation
+     * @return bool
+     */
+    public function removeRole(string $roleId, ?string $revokedBy = null, ?string $reason = null): bool
+    {
+        try {
+            $assignment = ContentRole::where('content_id', $this->id)
+                                    ->where('role_id', $roleId)
+                                    ->first();
+
+            if (!$assignment) {
+                return false;
+            }
+
+            return $assignment->revokeAccess($revokedBy, $reason);
+        } catch (\Exception $e) {
+            Log::error('Failed to remove role from content', [
+                'content_id' => $this->id,
+                'role_id' => $roleId,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Check if a role has access to this content.
+     * 
+     * @param string $roleId Role ID to check
+     * @return bool
+     */
+    public function hasRoleAccess(string $roleId): bool
+    {
+        return ContentRole::where('content_id', $this->id)
+                         ->where('role_id', $roleId)
+                         ->active()
+                         ->exists();
+    }
+
+    /**
+     * Check if a user has access to this content through their roles.
+     * 
+     * @param User $user User to check
+     * @param string $permission Specific permission to check (view, edit, etc.)
+     * @return bool
+     */
+    public function userHasAccess(User $user, string $permission = 'view'): bool
+    {
+        $userRoleIds = $user->roles()->pluck('idbi_roles.id')->toArray();
+        
+        if (empty($userRoleIds)) {
+            return false;
+        }
+
+        $permissionColumn = 'can_' . $permission;
+        
+        return ContentRole::where('content_id', $this->id)
+                         ->whereIn('role_id', $userRoleIds)
+                         ->active()
+                         ->where($permissionColumn, true)
+                         ->exists();
+    }
+
+    /**
+     * Get all roles with their permissions for this content.
+     * 
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getRolePermissions()
+    {
+        return ContentRole::with('role')
+                         ->where('content_id', $this->id)
+                         ->active()
+                         ->get();
+    }
+
+    /**
+     * Bulk assign multiple roles to this content.
+     * 
+     * @param array $roleAssignments Array of role assignments with permissions
+     * @param string|null $grantedBy User ID who is granting access
+     * @return array Array of created/updated assignments
+     */
+    public function bulkAssignRoles(array $roleAssignments, ?string $grantedBy = null): array
+    {
+        $results = [];
+        
+        foreach ($roleAssignments as $roleId => $permissions) {
+            $assignment = $this->assignRole($roleId, $permissions, $grantedBy);
+            if ($assignment) {
+                $results[] = $assignment;
+            }
+        }
+        
+        return $results;
     }
 
     /**
@@ -528,5 +739,315 @@ class Content extends Model
                 $q->orWhereJsonContains('tags', $tag);
             }
         });
+    }
+
+    // ==========================================
+    // CONTENT EXPIRY FUNCTIONALITY
+    // ==========================================
+
+    /**
+     * Scope for expired content.
+     * 
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeExpired($query)
+    {
+        return $query->whereNotNull('expires_at')
+                    ->where('expires_at', '<=', now());
+    }
+
+    /**
+     * Scope for content expiring soon.
+     * 
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param int $days Number of days to look ahead
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeExpiringSoon($query, int $days = 7)
+    {
+        return $query->whereNotNull('expires_at')
+                    ->where('expires_at', '>', now())
+                    ->where('expires_at', '<=', now()->addDays($days));
+    }
+
+    /**
+     * Scope for content expiring on a specific date.
+     * 
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string $date Date in Y-m-d format
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeExpiringOn($query, string $date)
+    {
+        $startOfDay = Carbon::parse($date)->startOfDay();
+        $endOfDay = Carbon::parse($date)->endOfDay();
+        
+        return $query->whereNotNull('expires_at')
+                    ->whereBetween('expires_at', [$startOfDay, $endOfDay]);
+    }
+
+    /**
+     * Scope for content without expiry date.
+     * 
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeNeverExpires($query)
+    {
+        return $query->whereNull('expires_at');
+    }
+
+    /**
+     * Check if content will expire within specified days.
+     * 
+     * @param int $days Number of days to check
+     * @return bool
+     */
+    public function isExpiringSoon(int $days = 7): bool
+    {
+        if (!$this->expires_at) {
+            return false;
+        }
+
+        return $this->expires_at->isFuture() && 
+               $this->expires_at->lte(now()->addDays($days));
+    }
+
+    /**
+     * Get days until expiry.
+     * 
+     * @return int|null Number of days until expiry, null if no expiry date
+     */
+    public function getDaysUntilExpiry(): ?int
+    {
+        if (!$this->expires_at) {
+            return null;
+        }
+
+        if ($this->isExpired()) {
+            return 0;
+        }
+
+        return now()->diffInDays($this->expires_at, false);
+    }
+
+    /**
+     * Get human-readable time until expiry.
+     * 
+     * @return string|null
+     */
+    public function getTimeUntilExpiry(): ?string
+    {
+        if (!$this->expires_at) {
+            return null;
+        }
+
+        if ($this->isExpired()) {
+            return 'Expired ' . $this->expires_at->diffForHumans();
+        }
+
+        return 'Expires ' . $this->expires_at->diffForHumans();
+    }
+
+    /**
+     * Extend content expiry date.
+     * 
+     * @param int $days Number of days to extend
+     * @param string|null $reason Reason for extension
+     * @param string|null $extendedBy User ID who extended
+     * @return bool
+     */
+    public function extendExpiry(int $days, ?string $reason = null, ?string $extendedBy = null): bool
+    {
+        try {
+            $originalExpiry = $this->expires_at;
+            $newExpiry = $originalExpiry ? 
+                        $originalExpiry->addDays($days) : 
+                        now()->addDays($days);
+
+            $this->update([
+                'expires_at' => $newExpiry,
+                'editor_id' => $extendedBy ?? Auth::id()
+            ]);
+
+            // Log the extension
+            activity()
+                ->performedOn($this)
+                ->withProperties([
+                    'action' => 'expiry_extended',
+                    'original_expiry' => $originalExpiry?->toISOString(),
+                    'new_expiry' => $newExpiry->toISOString(),
+                    'days_extended' => $days,
+                    'reason' => $reason,
+                    'extended_by' => $extendedBy ?? Auth::id()
+                ])
+                ->log("Content expiry extended by {$days} days");
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Failed to extend content expiry', [
+                'content_id' => $this->id,
+                'days' => $days,
+                'error' => $e->getMessage()
+            ]);
+            
+            return false;
+        }
+    }
+
+    /**
+     * Remove expiry date from content.
+     * 
+     * @param string|null $reason Reason for removing expiry
+     * @param string|null $removedBy User ID who removed expiry
+     * @return bool
+     */
+    public function removeExpiry(?string $reason = null, ?string $removedBy = null): bool
+    {
+        try {
+            $originalExpiry = $this->expires_at;
+
+            $this->update([
+                'expires_at' => null,
+                'editor_id' => $removedBy ?? Auth::id()
+            ]);
+
+            // Log the removal
+            activity()
+                ->performedOn($this)
+                ->withProperties([
+                    'action' => 'expiry_removed',
+                    'original_expiry' => $originalExpiry?->toISOString(),
+                    'reason' => $reason,
+                    'removed_by' => $removedBy ?? Auth::id()
+                ])
+                ->log('Content expiry date removed');
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Failed to remove content expiry', [
+                'content_id' => $this->id,
+                'error' => $e->getMessage()
+            ]);
+            
+            return false;
+        }
+    }
+
+    /**
+     * Set new expiry date for content.
+     * 
+     * @param Carbon|string $expiryDate New expiry date
+     * @param string|null $reason Reason for setting expiry
+     * @param string|null $setBy User ID who set expiry
+     * @return bool
+     */
+    public function setExpiry($expiryDate, ?string $reason = null, ?string $setBy = null): bool
+    {
+        try {
+            $originalExpiry = $this->expires_at;
+            $newExpiry = $expiryDate instanceof Carbon ? $expiryDate : Carbon::parse($expiryDate);
+
+            $this->update([
+                'expires_at' => $newExpiry,
+                'editor_id' => $setBy ?? Auth::id()
+            ]);
+
+            // Log the change
+            activity()
+                ->performedOn($this)
+                ->withProperties([
+                    'action' => 'expiry_set',
+                    'original_expiry' => $originalExpiry?->toISOString(),
+                    'new_expiry' => $newExpiry->toISOString(),
+                    'reason' => $reason,
+                    'set_by' => $setBy ?? Auth::id()
+                ])
+                ->log('Content expiry date updated');
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Failed to set content expiry', [
+                'content_id' => $this->id,
+                'expiry_date' => $expiryDate,
+                'error' => $e->getMessage()
+            ]);
+            
+            return false;
+        }
+    }
+
+    /**
+     * Get expiry status with detailed information.
+     * 
+     * @return array
+     */
+    public function getExpiryStatus(): array
+    {
+        if (!$this->expires_at) {
+            return [
+                'has_expiry' => false,
+                'status' => 'never_expires',
+                'message' => 'This content never expires',
+                'days_remaining' => null,
+                'expires_at' => null,
+                'is_expired' => false,
+                'is_expiring_soon' => false
+            ];
+        }
+
+        $isExpired = $this->isExpired();
+        $daysRemaining = $this->getDaysUntilExpiry();
+        $isExpiringSoon = $this->isExpiringSoon();
+
+        if ($isExpired) {
+            $status = 'expired';
+            $message = 'This content has expired';
+        } elseif ($isExpiringSoon) {
+            $status = 'expiring_soon';
+            $message = "This content expires in {$daysRemaining} day(s)";
+        } else {
+            $status = 'active';
+            $message = "This content expires in {$daysRemaining} day(s)";
+        }
+
+        return [
+            'has_expiry' => true,
+            'status' => $status,
+            'message' => $message,
+            'days_remaining' => $daysRemaining,
+            'expires_at' => $this->expires_at->toISOString(),
+            'expires_at_human' => $this->expires_at->format('M j, Y \a\t g:i A'),
+            'is_expired' => $isExpired,
+            'is_expiring_soon' => $isExpiringSoon,
+            'time_until_expiry' => $this->getTimeUntilExpiry()
+        ];
+    }
+
+    /**
+     * Get content expiry statistics for reporting.
+     * 
+     * @return array
+     */
+    public static function getExpiryStatistics(): array
+    {
+        $total = static::count();
+        $withExpiry = static::whereNotNull('expires_at')->count();
+        $expired = static::expired()->count();
+        $expiringSoon = static::expiringSoon(7)->count();
+        $expiringThisMonth = static::expiringSoon(30)->count();
+        $neverExpires = static::neverExpires()->count();
+
+        return [
+            'total_content' => $total,
+            'with_expiry_date' => $withExpiry,
+            'expired' => $expired,
+            'expiring_within_7_days' => $expiringSoon,
+            'expiring_within_30_days' => $expiringThisMonth,
+            'never_expires' => $neverExpires,
+            'percentage_with_expiry' => $total > 0 ? round(($withExpiry / $total) * 100, 1) : 0,
+            'percentage_expired' => $withExpiry > 0 ? round(($expired / $withExpiry) * 100, 1) : 0
+        ];
     }
 }

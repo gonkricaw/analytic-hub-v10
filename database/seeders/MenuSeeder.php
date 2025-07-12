@@ -203,6 +203,24 @@ class MenuSeeder extends Seeder
                 'required_roles' => ['admin', 'super_admin']
             ]);
 
+            $popularContentAnalytics = $this->createMenu([
+                'name' => 'popular_content_analytics',
+                'title' => 'Popular Content Analytics',
+                'description' => 'Comprehensive analytics for popular content performance',
+                'url' => '/admin/analytics/popular-content',
+                'icon' => 'fas fa-fire',
+                'type' => 'link',
+                'target' => '_self',
+                'sort_order' => 3,
+                'level' => 1,
+                'parent_id' => $reports->id,
+                'is_active' => true,
+                'is_external' => false,
+                'is_system_menu' => false,
+                'required_permission_id' => null,
+                'required_roles' => ['admin', 'super_admin']
+            ]);
+
             // Level 2 Menus (Children of User Management)
             $this->createMenu([
                 'name' => 'users',
