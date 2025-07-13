@@ -85,7 +85,7 @@ class PopularContentAnalyticsController extends Controller
             $performanceMetrics = $this->getContentPerformanceMetrics();
             
             // Get engagement analytics
-            $engagementAnalytics = $this->getEngagementAnalytics();
+            $engagementAnalytics = $this->getEngagementAnalyticsSummary();
             
             return view('admin.analytics.popular-content.index', compact(
                 'dashboardData',
@@ -437,13 +437,13 @@ class PopularContentAnalyticsController extends Controller
     }
 
     /**
-     * Calculate engagement analytics.
+     * Calculate engagement analytics summary.
      * 
      * Returns detailed engagement metrics and user behavior patterns.
      * 
      * @return array Engagement analytics data
      */
-    protected function getEngagementAnalytics(): array
+    protected function getEngagementAnalyticsSummary(): array
     {
         $cacheKey = 'engagement_analytics_summary';
         

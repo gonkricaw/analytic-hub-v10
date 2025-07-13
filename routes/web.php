@@ -334,7 +334,7 @@ Route::prefix('email')->middleware(['email.tracking'])->group(function () {
     })->name('email.track.click');
     
     // Email unsubscribe page
-    Route::get('/unsubscribe/{messageId?}', function ($messageId = null, Request $request) {
+    Route::get('/unsubscribe/{messageId?}', function (Request $request, $messageId = null) {
         return view('emails.unsubscribe', [
             'messageId' => $messageId,
             'email' => $request->get('email')

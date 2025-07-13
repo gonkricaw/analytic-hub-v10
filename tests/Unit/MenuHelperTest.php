@@ -7,10 +7,12 @@ use App\Helpers\MenuHelper;
 use App\Models\Menu;
 use App\Models\User;
 use App\Models\Role;
+use App\Models\UserRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Carbon\Carbon;
 
 /**
  * Class MenuHelperTest
@@ -46,7 +48,13 @@ class MenuHelperTest extends TestCase
         
         // Create test user
         $this->testUser = User::factory()->create();
-        $this->testUser->roles()->attach($this->testRole);
+        
+        UserRole::create([
+            'user_id' => $this->testUser->id,
+            'role_id' => $this->testRole->id,
+            'is_active' => true,
+            'assigned_at' => Carbon::now()
+        ]);
         
         // Create test menus
         $this->parentMenu = Menu::create([

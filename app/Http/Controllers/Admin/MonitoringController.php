@@ -837,7 +837,7 @@ class MonitoringController extends Controller
             ->toArray();
     }
     
-    protected function parseLogFile(string $filename, Request $request): array
+    protected function parseLogFileAsArray(string $filename, Request $request): array
     {
         $filePath = storage_path('logs/' . $filename);
         

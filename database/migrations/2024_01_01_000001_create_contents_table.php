@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Migration for creating contents table
@@ -97,7 +98,10 @@ class CreateContentsTable extends Migration
             $table->index(['slug']);
             $table->index(['created_at']);
             $table->index(['view_count']);
-            $table->fullText(['title', 'excerpt', 'content']); // Full-text search
+            // Full-text search (only for MySQL, not supported in SQLite)
+            if (DB::getDriverName() !== 'sqlite') {
+                $table->fullText(['title', 'excerpt', 'content']);
+            }
             
             // Foreign key constraints
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');

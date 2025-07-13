@@ -109,7 +109,7 @@ return new class extends Migration
                     'low' as productivity_level
                     
                 FROM sessions s
-                INNER JOIN idbi_users u ON s.user_id::text = u.id::text
+                INNER JOIN idbi_users u ON s.user_id = u.id
                 WHERE u.status = 'active'
                 AND u.deleted_at IS NULL
                 -- Consider sessions active if last activity was within 30 minutes
@@ -205,7 +205,7 @@ return new class extends Migration
                     'low' as productivity_level
                     
                 FROM sessions s
-                INNER JOIN idbi_users u ON s.user_id::text = u.id::text
+                INNER JOIN idbi_users u ON s.user_id = u.id
                 WHERE u.status = 'active'
                 AND u.deleted_at IS NULL
                 -- Consider sessions active if last activity was within 30 minutes
