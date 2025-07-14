@@ -59,7 +59,8 @@ class EmailSystemTest extends TestCase
     {
         $this->testUser = User::factory()->create([
             'email' => 'test@example.com',
-            'name' => 'Test User',
+            'first_name' => 'Test',
+            'last_name' => 'User',
             'status' => 'active',
             'terms_accepted' => true
         ]);
@@ -194,7 +195,8 @@ class EmailSystemTest extends TestCase
     {
         $invitationData = [
             'email' => 'invited@example.com',
-            'name' => 'Invited User',
+            'first_name' => 'Invited',
+            'last_name' => 'User',
             'invitation_token' => Str::random(60)
         ];
         

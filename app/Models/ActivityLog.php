@@ -136,7 +136,6 @@ class ActivityLog extends Model
     protected $casts = [
         'subject_data' => 'array',
         'causer_data' => 'array',
-        'properties' => 'array',
         'old_values' => 'array',
         'new_values' => 'array',
         'changes' => 'array',
@@ -429,19 +428,44 @@ class ActivityLog extends Model
     }
 
     /**
-     * Get encrypted sensitive properties
+     * Get properties attribute with encryption handling
      */
-    public function getEncryptedPropertiesAttribute(): string
+    public function getPropertiesAttribute($value)
     {
-        return $this->is_sensitive ? Crypt::encrypt($this->attributes['properties']) : $this->attributes['properties'];
+        if (!$value) {
+            return null;
+        }
+        
+        // If sensitive, decrypt first then JSON decode
+        if ($this->is_sensitive && $value) {
+            try {
+                $decrypted = Crypt::decrypt($value);
+                return json_decode($decrypted, true);
+            } catch (\Exception $e) {
+                // If decryption fails, try to decode as regular JSON
+                return json_decode($value, true);
+            }
+        }
+        
+        // For non-sensitive data, use Laravel's built-in array casting
+        return json_decode($value, true);
     }
 
     /**
-     * Set encrypted sensitive properties
+     * Set properties attribute with encryption handling
      */
     public function setPropertiesAttribute($value): void
     {
-        $this->attributes['properties'] = $this->is_sensitive ? Crypt::decrypt($value) : $value;
+        if (is_null($value)) {
+            $this->attributes['properties'] = null;
+            return;
+        }
+        
+        // Convert array to JSON
+        $jsonValue = is_array($value) ? json_encode($value) : $value;
+        
+        // Encrypt if sensitive
+        $this->attributes['properties'] = $this->is_sensitive ? Crypt::encrypt($jsonValue) : $jsonValue;
     }
 
     /**

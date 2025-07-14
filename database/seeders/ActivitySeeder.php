@@ -210,6 +210,7 @@ class ActivitySeeder extends Seeder
                         'id' => Str::uuid(),
                         'user_id' => $user->id,
                         'activity_type' => $activityType,
+                        'activity_name' => ucfirst(str_replace('_', ' ', $activityType)),
                         'subject_type' => $activityData['subject_type'],
                         'subject_id' => $activityData['subject_id'],
                         'description' => $activityData['description'],

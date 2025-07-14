@@ -304,6 +304,7 @@ class SqlInjectionPrevention
             // Log to activity log
             ActivityLog::create([
                 'user_id' => auth()->id(),
+                'event' => 'security.sql_injection_attempt', // Add required event field
                 'action' => 'security.sql_injection_attempt',
                 'description' => 'SQL injection attempt detected',
                 'properties' => [

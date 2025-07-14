@@ -22,10 +22,7 @@
     <meta name="keywords" content="analytics, dashboard, authentication, login">
     <meta name="author" content="Analytics Hub">
     
-    <!-- Security Headers -->
-    <meta http-equiv="X-Content-Type-Options" content="nosniff">
-    <meta http-equiv="X-Frame-Options" content="DENY">
-    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    <!-- Security Headers are set via middleware (X-Content-Type-Options, X-Frame-Options, X-XSS-Protection) -->
     
     <style>
         * {

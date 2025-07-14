@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletes;
+
 use App\Traits\HasUuid;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -57,11 +57,11 @@ use Illuminate\Support\Facades\Cache;
  * @property string|null $updated_by
  * @property \Carbon\Carbon|null $created_at
  * @property \Carbon\Carbon|null $updated_at
- * @property \Carbon\Carbon|null $deleted_at
+
  */
 class LoginAttempt extends Model
 {
-    use HasFactory, HasUuid, SoftDeletes;
+    use HasFactory, HasUuid;
 
     /**
      * The table associated with the model.

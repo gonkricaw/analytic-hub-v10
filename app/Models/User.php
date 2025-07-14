@@ -160,6 +160,18 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the is_active attribute.
+     * User is considered active if they have at least one active role.
+     * 
+     * @return bool
+     */
+    public function getIsActiveAttribute(): bool
+    {
+        return $this->status === self::STATUS_ACTIVE && 
+               $this->roles()->wherePivot('is_active', true)->exists();
+    }
+
+    /**
      * Check if user is locked.
      * 
      * @return bool

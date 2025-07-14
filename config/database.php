@@ -96,9 +96,15 @@ return [
             'search_path' => env('DB_SCHEMA', 'public'),
             'sslmode' => env('DB_SSLMODE', 'prefer'),
             'options' => [
-                \PDO::ATTR_TIMEOUT => 30,
+                \PDO::ATTR_TIMEOUT => 120,
                 \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+                \PDO::ATTR_PERSISTENT => false,
+                \PDO::ATTR_EMULATE_PREPARES => false,
+                \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
             ],
+            'connect_timeout' => 120,
+            'read_timeout' => 120,
+            'write_timeout' => 120,
         ],
 
         'sqlsrv' => [

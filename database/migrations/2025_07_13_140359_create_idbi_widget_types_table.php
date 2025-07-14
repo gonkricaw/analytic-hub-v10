@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('name')->unique();
             $table->string('display_name');
             $table->text('description')->nullable();
+            $table->string('component');
             $table->string('icon')->nullable();
             $table->string('category')->default('general');
             $table->boolean('is_active')->default(true);

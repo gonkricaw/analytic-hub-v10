@@ -29,13 +29,18 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->boolean('is_first_login')->default(true);
             $table->timestamp('password_changed_at')->nullable();
+            $table->timestamp('password_expires_at')->nullable();
+            $table->boolean('force_password_change')->default(false);
             $table->timestamp('last_login_at')->nullable();
             $table->string('last_login_ip', 45)->nullable();
+            $table->timestamp('last_seen_at')->nullable();
+            $table->string('last_ip', 45)->nullable();
             
             // User status and preferences
             $table->enum('status', ['active', 'suspended', 'pending', 'deleted'])->default('pending');
             $table->boolean('terms_accepted')->default(false);
             $table->timestamp('terms_accepted_at')->nullable();
+            $table->string('terms_version_accepted', 20)->nullable();
             $table->boolean('email_notifications')->default(true);
             
             // Profile information

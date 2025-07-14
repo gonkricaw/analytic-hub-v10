@@ -81,14 +81,14 @@ class UserManagementTest extends TestCase
         $this->adminUser = User::factory()->create([
             'email' => 'admin@example.com',
             'status' => 'active',
-            'first_login' => false,
+            'is_first_login' => false,
             'terms_accepted' => true
         ]);
         
         $this->testUser = User::factory()->create([
             'email' => 'user@example.com',
             'status' => 'active',
-            'first_login' => false,
+            'is_first_login' => false,
             'terms_accepted' => true
         ]);
         
@@ -112,10 +112,11 @@ class UserManagementTest extends TestCase
      */
     private function setUpServices(): void
     {
-        $this->userController = new UserController();
-        $this->profileController = new ProfileController();
-        $this->invitationService = new UserInvitationService();
         $this->avatarService = new AvatarService();
+        $this->invitationService = new UserInvitationService();
+        // Note: Controllers are not instantiated in unit tests due to middleware dependencies
+        // $this->userController = new UserController($this->invitationService);
+        // $this->profileController = new ProfileController($this->avatarService);
     }
 
     /**
@@ -124,18 +125,23 @@ class UserManagementTest extends TestCase
     public function test_user_creation(): void
     {
         $userData = [
-            'name' => 'New User',
+            'first_name' => 'New',
+            'last_name' => 'User',
             'email' => 'newuser@example.com',
-            'status' => 'active'
+            'password' => Hash::make('password123'),
+            'status' => 'active',
+            'is_first_login' => true,
+            'terms_accepted' => false
         ];
         
         $user = User::create($userData);
         
         $this->assertInstanceOf(User::class, $user);
-        $this->assertEquals('New User', $user->name);
+        $this->assertEquals('New', $user->first_name);
+        $this->assertEquals('User', $user->last_name);
         $this->assertEquals('newuser@example.com', $user->email);
         $this->assertEquals('active', $user->status);
-        $this->assertTrue($user->first_login);
+        $this->assertTrue($user->is_first_login);
         $this->assertFalse($user->terms_accepted);
     }
 
@@ -144,13 +150,18 @@ class UserManagementTest extends TestCase
      */
     public function test_user_update(): void
     {
-        $originalName = $this->testUser->name;
-        $newName = 'Updated User Name';
+        $originalFirstName = $this->testUser->first_name;
+        $newFirstName = 'Updated';
+        $newLastName = 'Name';
         
-        $this->testUser->update(['name' => $newName]);
+        $this->testUser->update([
+            'first_name' => $newFirstName,
+            'last_name' => $newLastName
+        ]);
         
-        $this->assertEquals($newName, $this->testUser->fresh()->name);
-        $this->assertNotEquals($originalName, $this->testUser->fresh()->name);
+        $this->assertEquals($newFirstName, $this->testUser->fresh()->first_name);
+        $this->assertEquals($newLastName, $this->testUser->fresh()->last_name);
+        $this->assertNotEquals($originalFirstName, $this->testUser->fresh()->first_name);
     }
 
     /**
@@ -215,7 +226,8 @@ class UserManagementTest extends TestCase
     public function test_user_invitation_process(): void
     {
         $invitationData = [
-            'name' => 'Invited User',
+            'first_name' => 'Invited',
+            'last_name' => 'User',
             'email' => 'invited@example.com',
             'roles' => [$this->userRole->id]
         ];
@@ -229,7 +241,7 @@ class UserManagementTest extends TestCase
         $invitedUser = $result['user'];
         $this->assertEquals('Invited User', $invitedUser->name);
         $this->assertEquals('invited@example.com', $invitedUser->email);
-        $this->assertTrue($invitedUser->first_login);
+        $this->assertTrue($invitedUser->is_first_login);
         $this->assertFalse($invitedUser->terms_accepted);
     }
 
@@ -302,14 +314,16 @@ class UserManagementTest extends TestCase
     public function test_profile_update(): void
     {
         $updateData = [
-            'name' => 'Updated Profile Name',
+            'first_name' => 'Updated',
+            'last_name' => 'Profile',
             'email_notifications' => false
         ];
         
         $this->testUser->update($updateData);
         
         $updatedUser = $this->testUser->fresh();
-        $this->assertEquals('Updated Profile Name', $updatedUser->name);
+        $this->assertEquals('Updated', $updatedUser->first_name);
+        $this->assertEquals('Profile', $updatedUser->last_name);
         $this->assertFalse($updatedUser->email_notifications);
     }
 
@@ -365,13 +379,14 @@ class UserManagementTest extends TestCase
     public function test_user_search(): void
     {
         // Create additional test users
-        User::factory()->create(['name' => 'John Doe', 'email' => 'john@example.com']);
-        User::factory()->create(['name' => 'Jane Smith', 'email' => 'jane@example.com']);
+        User::factory()->create(['first_name' => 'John', 'last_name' => 'Doe', 'email' => 'john@example.com']);
+        User::factory()->create(['first_name' => 'Jane', 'last_name' => 'Smith', 'email' => 'jane@example.com']);
         
-        // Search by name
-        $results = User::where('name', 'LIKE', '%John%')->get();
+        // Search by first name
+        $results = User::where('first_name', 'LIKE', '%John%')->get();
         $this->assertEquals(1, $results->count());
-        $this->assertEquals('John Doe', $results->first()->name);
+        $this->assertEquals('John', $results->first()->first_name);
+        $this->assertEquals('Doe', $results->first()->last_name);
         
         // Search by email
         $results = User::where('email', 'LIKE', '%jane%')->get();
@@ -466,7 +481,8 @@ class UserManagementTest extends TestCase
         
         // Try to create user with existing email
         User::create([
-            'name' => 'Duplicate User',
+            'first_name' => 'Duplicate',
+            'last_name' => 'User',
             'email' => $this->testUser->email, // Same email as existing user
             'password' => Hash::make('password')
         ]);

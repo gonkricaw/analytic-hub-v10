@@ -9,6 +9,7 @@ use App\Models\UserRole;
 use App\Models\LoginAttempt;
 use App\Models\BlacklistedIp;
 use App\Models\PasswordHistory;
+use App\Http\Controllers\AuthController;
 use App\Services\PasswordValidationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -53,7 +54,7 @@ class AuthenticationTest extends TestCase
             'email' => 'test@example.com',
             'password' => Hash::make('TestPassword123!'),
             'status' => 'active',
-            'first_login' => false,
+            'is_first_login' => false,
             'terms_accepted' => true,
             'password_changed_at' => now()
         ]);
@@ -145,7 +146,7 @@ class AuthenticationTest extends TestCase
         ]);
         
         $attempts = LoginAttempt::where('ip_address', $ipAddress)
-            ->where('success', false)
+            ->where('status', 'failed')
             ->count();
             
         $this->assertEquals(1, $attempts);
@@ -163,13 +164,13 @@ class AuthenticationTest extends TestCase
             LoginAttempt::create([
                 'email' => 'test@example.com',
                 'ip_address' => $ipAddress,
-                'success' => false,
+                'status' => 'failed',
                 'attempted_at' => now()->subMinutes($i)
             ]);
         }
         
         $failedAttempts = LoginAttempt::where('ip_address', $ipAddress)
-            ->where('success', false)
+            ->where('status', 'failed')
             ->count();
             
         $this->assertEquals(30, $failedAttempts);
@@ -185,7 +186,8 @@ class AuthenticationTest extends TestCase
     {
         // Test valid password
         $validPassword = 'ValidPass123!';
-        $this->assertTrue($this->passwordService->validatePasswordStrength($validPassword));
+        $result = $this->passwordService->validatePassword($validPassword);
+        $this->assertTrue($result['valid']);
         
         // Test invalid passwords
         $invalidPasswords = [
@@ -197,7 +199,8 @@ class AuthenticationTest extends TestCase
         ];
         
         foreach ($invalidPasswords as $password) {
-            $this->assertFalse($this->passwordService->validatePasswordStrength($password));
+            $result = $this->passwordService->validatePassword($password);
+            $this->assertFalse($result['valid']);
         }
     }
 
@@ -216,7 +219,7 @@ class AuthenticationTest extends TestCase
         ]);
         
         // Test that old password is in history
-        $isInHistory = $this->passwordService->isPasswordInHistory(
+        $isInHistory = PasswordHistory::isPasswordReused(
             $this->testUser->id, 
             $oldPassword
         );
@@ -225,7 +228,7 @@ class AuthenticationTest extends TestCase
         
         // Test that new password is not in history
         $newPassword = 'NewPassword123!';
-        $isNewInHistory = $this->passwordService->isPasswordInHistory(
+        $isNewInHistory = PasswordHistory::isPasswordReused(
             $this->testUser->id, 
             $newPassword
         );
@@ -239,11 +242,11 @@ class AuthenticationTest extends TestCase
     public function test_password_expiry_check(): void
     {
         // Test non-expired password
-        $this->testUser->update(['password_changed_at' => now()->subDays(30)]);
+        $this->testUser->update(['password_expires_at' => now()->addDays(30)]);
         $this->assertFalse($this->passwordService->isPasswordExpired($this->testUser));
         
-        // Test expired password (over 90 days)
-        $this->testUser->update(['password_changed_at' => now()->subDays(95)]);
+        // Test expired password (past expiry date)
+        $this->testUser->update(['password_expires_at' => now()->subDays(5)]);
         $this->assertTrue($this->passwordService->isPasswordExpired($this->testUser));
     }
 
@@ -252,13 +255,13 @@ class AuthenticationTest extends TestCase
      */
     public function test_first_login_detection(): void
     {
-        // Test user with first_login = true
-        $this->testUser->update(['first_login' => true]);
-        $this->assertTrue($this->testUser->fresh()->first_login);
+        // Test user with is_first_login = true
+        $this->testUser->update(['is_first_login' => true]);
+        $this->assertTrue($this->testUser->fresh()->is_first_login);
         
-        // Test user with first_login = false
-        $this->testUser->update(['first_login' => false]);
-        $this->assertFalse($this->testUser->fresh()->first_login);
+        // Test user with is_first_login = false
+        $this->testUser->update(['is_first_login' => false]);
+        $this->assertFalse($this->testUser->fresh()->is_first_login);
     }
 
     /**
@@ -318,7 +321,9 @@ class AuthenticationTest extends TestCase
         BlacklistedIp::create([
             'ip_address' => $ipAddress,
             'reason' => 'Multiple failed login attempts',
-            'blocked_at' => now()
+            'blacklisted_at' => now(),
+            'blacklisted_by' => 'system',
+            'is_active' => true
         ]);
         
         $isBlacklisted = BlacklistedIp::where('ip_address', $ipAddress)->exists();

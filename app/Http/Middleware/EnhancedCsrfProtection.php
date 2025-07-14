@@ -88,6 +88,7 @@ class EnhancedCsrfProtection extends Middleware
             'user_id' => auth()->id(),
             'subject_type' => null,
             'subject_id' => null,
+            'event' => 'csrf_failure', // Add required event field
             'action' => 'csrf_failure',
             'description' => 'CSRF token validation failed',
             'properties' => [
@@ -160,11 +161,12 @@ class EnhancedCsrfProtection extends Middleware
             \App\Models\BlacklistedIp::create([
                 'ip_address' => $ipAddress,
                 'reason' => "Excessive CSRF failures ({$failureCount} attempts)",
-                'blocked_by' => 'system',
+                'blacklisted_by' => auth()->id() ?? '00000000-0000-0000-0000-000000000000',
+                'blacklisted_at' => now(),
                 'is_active' => true,
                 'expires_at' => now()->addHours(24), // 24-hour temporary block
-                'attempt_count' => 1,
-                'last_attempt_at' => now()
+                'suspicious_activity_count' => 1,
+                'last_seen_at' => now()
             ]);
             
             // Log the blacklisting
@@ -172,6 +174,7 @@ class EnhancedCsrfProtection extends Middleware
                 'user_id' => null,
                 'subject_type' => \App\Models\BlacklistedIp::class,
                 'subject_id' => null,
+                'event' => 'ip_blacklisted_csrf_abuse', // Add required event field
                 'action' => 'ip_blacklisted_csrf_abuse',
                 'description' => "IP blacklisted due to excessive CSRF failures: {$ipAddress}",
                 'properties' => [

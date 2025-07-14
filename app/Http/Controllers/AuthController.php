@@ -211,7 +211,7 @@ class AuthController extends Controller
         }
         
         return BlacklistedIp::where('ip_address', $ipAddress)
-            ->where('status', 'active')
+            ->where('is_active', true)
             ->where(function ($query) {
                 $query->whereNull('expires_at')
                       ->orWhere('expires_at', '>', Carbon::now());
@@ -231,7 +231,7 @@ class AuthController extends Controller
     {
         // Count failed attempts for this IP in the last hour
         $failedAttempts = LoginAttempt::where('ip_address', $ipAddress)
-            ->where('success', false)
+            ->where('status', 'failed')
             ->where('created_at', '>=', Carbon::now()->subHour())
             ->count();
         
@@ -272,13 +272,11 @@ class AuthController extends Controller
         BlacklistedIp::create([
             'ip_address' => $ipAddress,
             'reason' => 'Exceeded maximum failed login attempts (' . self::MAX_FAILED_ATTEMPTS . ')',
-            'blocked_by' => 'system',
-            'blocked_at' => Carbon::now(),
+            'blacklisted_by' => auth()->id() ?? '00000000-0000-0000-0000-000000000000',
+            'blacklisted_at' => Carbon::now(),
             'expires_at' => Carbon::now()->addHours(24), // 24-hour block
-            'status' => 'active',
-            'user_agent' => $userAgent,
-            'attempted_email' => $email,
-            'attempt_count' => self::MAX_FAILED_ATTEMPTS
+            'is_active' => true,
+            'failed_login_count' => self::MAX_FAILED_ATTEMPTS
         ]);
         
         // Log security event
@@ -286,6 +284,7 @@ class AuthController extends Controller
             'user_id' => null,
             'subject_type' => BlacklistedIp::class,
             'subject_id' => null,
+            'event' => 'ip_blacklisted', // Add required event field
             'action' => 'ip_blacklisted',
             'description' => "IP address {$ipAddress} blacklisted for exceeding failed login attempts",
             'properties' => [
@@ -317,8 +316,8 @@ class AuthController extends Controller
         
         // Remove any active blacklist for this IP
         BlacklistedIp::where('ip_address', $ipAddress)
-            ->where('status', 'active')
-            ->update(['status' => 'inactive']);
+            ->where('is_active', true)
+            ->update(['is_active' => false]);
     }
 
     /**
@@ -355,6 +354,7 @@ class AuthController extends Controller
             'user_id' => $user->id,
             'subject_type' => User::class,
             'subject_id' => $user->id,
+            'event' => $action, // Add required event field
             'action' => $action,
             'description' => "User {$action}: {$user->email}",
             'properties' => $properties,

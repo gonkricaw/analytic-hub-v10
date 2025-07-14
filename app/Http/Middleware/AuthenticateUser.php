@@ -89,6 +89,7 @@ class AuthenticateUser
                 'user_id' => $user->id,
                 'subject_type' => \App\Models\User::class,
                 'subject_id' => $user->id,
+                'event' => 'auto_logout', // Add required event field
                 'action' => 'auto_logout',
                 'description' => "User automatically logged out: {$reason}",
                 'properties' => [

@@ -188,6 +188,7 @@ class TermsNotificationService
             // Log the acceptance
             ActivityLog::create([
                 'user_id' => $user->id,
+                'event' => 'terms_accepted', // Add required event field
                 'action' => 'terms_accepted',
                 'description' => "User accepted Terms & Conditions version {$currentVersion}",
                 'model_type' => 'User',

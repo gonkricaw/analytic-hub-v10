@@ -57,14 +57,16 @@ class NotificationSystemTest extends TestCase
     {
         $this->testUser = User::factory()->create([
             'email' => 'user@example.com',
-            'name' => 'Test User',
+            'first_name' => 'Test',
+            'last_name' => 'User',
             'status' => 'active',
             'terms_accepted' => true
         ]);
         
         $this->adminUser = User::factory()->create([
             'email' => 'admin@example.com',
-            'name' => 'Admin User',
+            'first_name' => 'Admin',
+            'last_name' => 'User',
             'status' => 'active',
             'terms_accepted' => true
         ]);

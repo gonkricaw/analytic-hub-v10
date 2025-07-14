@@ -157,6 +157,7 @@ class CheckUserStatus
             'user_id' => $user->id,
             'subject_type' => \App\Models\User::class,
             'subject_id' => $user->id,
+            'event' => $action, // Add required event field
             'action' => $action,
             'description' => $description,
             'properties' => [

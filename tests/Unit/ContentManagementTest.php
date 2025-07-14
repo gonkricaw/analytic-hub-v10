@@ -13,6 +13,7 @@ use App\Models\UserRole;
 use App\Services\ContentEncryptionService;
 use App\Services\ContentVisitTracker;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
@@ -452,12 +453,12 @@ class ContentManagementTest extends TestCase
     {
         // Track multiple visits
         for ($i = 0; $i < 5; $i++) {
-            $this->visitTracker->trackVisit(
-                $this->testContent->id,
-                $this->testUser->id,
-                '192.168.1.' . ($i + 1),
-                'Test Browser'
-            );
+            $request = Request::create('/test', 'GET');
+            $request->server->set('REMOTE_ADDR', '192.168.1.' . ($i + 1));
+            $request->server->set('HTTP_USER_AGENT', 'Test Browser');
+            
+            $this->actingAs($this->testUser);
+            $this->visitTracker->trackVisit($this->testContent, $request);
         }
         
         $visitCount = ContentAccessLog::where('content_id', $this->testContent->id)->count();
@@ -471,20 +472,20 @@ class ContentManagementTest extends TestCase
     }
 
     /**
-     * Test content metadata
+     * Test content custom fields storage
      */
-    public function test_content_metadata(): void
+    public function test_content_custom_fields_storage(): void
     {
-        $metadata = [
+        $customFields = [
             'author' => 'Test Author',
             'category' => 'Analytics',
             'tags' => ['dashboard', 'reports', 'analytics']
         ];
         
-        $this->testContent->update(['metadata' => json_encode($metadata)]);
+        $this->testContent->update(['custom_fields' => $customFields]);
         
-        $savedMetadata = json_decode($this->testContent->fresh()->metadata, true);
-        $this->assertEquals($metadata, $savedMetadata);
+        $savedCustomFields = $this->testContent->fresh()->custom_fields;
+        $this->assertEquals($customFields, $savedCustomFields);
     }
 
     /**

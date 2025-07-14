@@ -293,6 +293,7 @@ class RateLimiting
                 'user_id' => $user ? $user->id : null,
                 'subject_type' => $user ? \App\Models\User::class : null,
                 'subject_id' => $user ? $user->id : null,
+                'event' => 'rate_limit_exceeded', // Add required event field
                 'action' => 'rate_limit_exceeded',
                 'description' => "Rate limit exceeded for route: {$routeName}",
                 'properties' => [

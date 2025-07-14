@@ -84,6 +84,7 @@ class CheckBlacklistedIp
             'user_id' => null, // No user since access is blocked
             'subject_type' => BlacklistedIp::class,
             'subject_id' => $blacklistedIp->id,
+            'event' => 'blocked_access_attempt', // Add required event field
             'action' => 'blocked_access_attempt',
             'description' => "Blocked access attempt from blacklisted IP: {$request->ip()}",
             'properties' => [
@@ -126,6 +127,7 @@ class CheckBlacklistedIp
             'user_id' => auth()->id(),
             'subject_type' => BlacklistedIp::class,
             'subject_id' => $blacklistedIp ? $blacklistedIp->id : null,
+            'event' => $action, // Add required event field
             'action' => $action,
             'description' => $description,
             'properties' => [

@@ -37,6 +37,7 @@ class WidgetType extends Model
         'name',
         'display_name',
         'description',
+        'component',
         'icon',
         'category',
         'is_active',
